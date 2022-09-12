@@ -220,20 +220,30 @@ async function decryptSecret() {
   var ciphertextEl = document.getElementById("ciphertext");
   var ivEl = document.getElementById("iv");
   var passphraseEl = document.getElementById("passphrase");
+  var cleartextEl = document.getElementById("cleartext");
+  var decryptBtnEl = document.getElementById("decrypt-btn");
+
+  var ciphertext = ciphertextEl.value;
 
   var iv = base64ToArrayBuffer(ivEl.value);
   var userkey = passphraseEl.value;
+
+  passphraseEl.type = "hidden";
+  passphraseEl.value = "";
+  ciphertextEl.value = "";
+  ivEl.value = "";
 
   var encoder = new TextEncoder();
 
   var userkeyBuffer = await sha256(encoder.encode(userkey));
   var encryptionkey = await importKey(userkeyBuffer);
-  var decryptedData = await decrypt(base64ToArrayBuffer(ciphertextEl.value), encryptionkey, iv);
+  var decryptedData = await decrypt(base64ToArrayBuffer(ciphertext), encryptionkey, iv);
   var decoder = new TextDecoder("utf-8");
   var res = decoder.decode(decryptedData)
 
-  console.log(res)
-
+  decryptBtnEl.hidden = true;
+  cleartextEl.value = res;
+  cleartextEl.hidden = false;
 }
 
 window.addEventListener("live-secret:create-secret", createSecret);

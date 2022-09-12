@@ -52,7 +52,7 @@ defmodule LiveSecretWeb.PageLive do
           <%= case @special_action do %>
           <% :decrypting -> %>
             <% secret = read_secret_for_decrypt(@id) %>
-            <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
+            <.decrypt_modal secret={secret} />
           <% _ -> %>
           <% end %>
 
@@ -137,18 +137,23 @@ defmodule LiveSecretWeb.PageLive do
             </div>
           </div>
 
-          <.form let={f} for={@changeset} action="#" class="relative" id="decrypt-form">
-            <%= hidden_input f, :content, id: "ciphertext" %>
-            <%= hidden_input f, :iv, id: "iv" %>
-          </.form>
+          <div id="ciphertext-div-for-ignore" phx-update="ignore">
+            <input type="hidden" id="ciphertext" value={:base64.encode(@secret.content)} >
+          </div>
+          <div id="iv-div-for-ignore" phx-update="ignore">
+            <input type="hidden" id="iv" value={:base64.encode(@secret.iv)} >
+          </div>
+          <div id="cleartext-div-for-ignore" phx-update="ignore">
+            <textarea id="cleartext" hidden readonly class="[-webkit-text-security:square] h-24 focus:[-webkit-text-security:none] pt-3 block w-full resize-none border-0 py-0 placeholder-gray-500 focus:ring-0"/>
+          </div>
 
           <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
-            <button type="button" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
+            <button type="button" id="decrypt-btn" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
             phx-click={JS.dispatch("live-secret:decrypt-secret")}
             >Decrypt</button>
-            <button type="button" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm"
+            <button type="button" id="close-btn" class="mt-3 inline-flex w-full justify-center rounded-md border border-gray-300 bg-white px-4 py-2 text-base font-medium text-gray-700 shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:col-start-1 sm:mt-0 sm:text-sm"
             phx-click={JS.hide(to: "#decrypt-modal")}
-            >Cancel</button>
+            >Close</button>
           </div>
         </div>
       </div>
