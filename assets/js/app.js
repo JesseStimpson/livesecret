@@ -128,8 +128,7 @@ window.addEventListener("live-secret:clipcopy", (event) => {
   }
 });
 
-window.addEventListener("live-secret:select-expiration", (event) => {
-  console.log("Selecting expiration");
+window.addEventListener("live-secret:select-choice", (event) => {
   event.target.value = event.detail.value
   event.target.dispatchEvent(
     new Event("input", { bubbles: true })
@@ -174,6 +173,9 @@ async function createSecret(event) {
     userkey = passphrase.value;
   }
 
+  var burnkeyEl = document.getElementById("burnkey");
+  var burnkey = burnkeyEl.value;
+
   passphrase.value = ""
   passphrase.placeholder = "..."
 
@@ -185,7 +187,7 @@ async function createSecret(event) {
 
   // Read and clear the input in the form
   var cleartextEl = document.getElementById("cleartext");
-  var data = encoder.encode(cleartextEl.value)
+  var data = encoder.encode(burnkey + "\n" + cleartextEl.value)
   cleartextEl.value = ""
   cleartextEl.placeholder = "..."
 
@@ -221,7 +223,6 @@ async function decryptSecret() {
   var ivEl = document.getElementById("iv");
   var passphraseEl = document.getElementById("passphrase");
   var cleartextEl = document.getElementById("cleartext");
-  var decryptBtnEl = document.getElementById("decrypt-btn");
 
   var ciphertext = ciphertextEl.value;
 
@@ -241,9 +242,25 @@ async function decryptSecret() {
   var decoder = new TextDecoder("utf-8");
   var res = decoder.decode(decryptedData)
 
-  decryptBtnEl.hidden = true;
-  cleartextEl.value = res;
+
+  // The first line is the key that allows us to burn the message
+  var burnkeyLine = res.split('\n')[0].trim();
+  console.log(burnkeyLine);
+
+  var burnkeyEl = document.getElementById("burnkey");
+  burnkeyEl.value = burnkeyLine;
+  burnkeyEl.dispatchEvent(
+    new Event("input", { bubbles: true })
+  );
+
+  var cleartext = res.substring(res.indexOf("\n") + 1);
+  cleartextEl.value = cleartext;
   cleartextEl.hidden = false;
+
+  var closeBtnEl = document.getElementById("close-btn");
+  var decryptBtnEl = document.getElementById("decrypt-btn");
+  decryptBtnEl.setAttribute("phx-click", closeBtnEl.getAttribute("phx-click"));
+  decryptBtnEl.textContent = "OK";
 }
 
 window.addEventListener("live-secret:create-secret", createSecret);

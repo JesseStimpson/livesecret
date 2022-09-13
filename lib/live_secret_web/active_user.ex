@@ -7,7 +7,7 @@ defmodule LiveSecretWeb.ActiveUser do
     field :live_action, Ecto.Enum, values: [:admin, :receiver]
     field :joined_at, :naive_datetime
     field :left_at, :naive_datetime
-    field :state, Ecto.Enum, default: :locked, values: [:locked, :unlocked, :revealed]
+    field :state, Ecto.Enum, values: [:locked, :unlocked, :revealed]
   end
 
   def connected?(%ActiveUser{left_at: nil}), do: true

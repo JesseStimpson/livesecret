@@ -8,9 +8,11 @@ defmodule LiveSecret.Secret do
 
   @primary_key {:id, :string, autogenerate: false}
   schema "secrets" do
+    field :burn_key, :string, redact: true
     field :burned_at, :naive_datetime
     field :content, :binary, redact: true
     field :iv, :binary, redact: true
+    field :live?, :boolean, default: true
     field :creator_key, :string, redact: true
     field :expires_at, :naive_datetime
 
@@ -24,8 +26,16 @@ defmodule LiveSecret.Secret do
   @doc false
   def changeset(secret, attrs) do
     secret
-    |> Ecto.Changeset.cast(attrs, [:creator_key, :content, :iv, :burned_at, :expires_at])
-    |> Ecto.Changeset.validate_required([:creator_key, :iv, :expires_at])
+    |> Ecto.Changeset.cast(attrs, [
+      :creator_key,
+      :burn_key,
+      :content,
+      :iv,
+      :live?,
+      :burned_at,
+      :expires_at
+    ])
+    |> Ecto.Changeset.validate_required([:creator_key, :live?, :expires_at])
     |> validate_content_size()
     |> validate_iv_size()
   end

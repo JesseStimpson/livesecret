@@ -48,7 +48,12 @@ defmodule LiveSecretWeb.UserListComponent do
                 </div>
               </div>
             </div>
-            <.badge self={@self} live_action={@live_action} active_user={active_user} force_disable={not is_nil(@burned_at)} />
+            <.badge
+              self={@self}
+              live_action={@live_action}
+              active_user={active_user}
+              force_disable={not is_nil(@burned_at)}
+              />
           </div>
       </li>
       <% end %>

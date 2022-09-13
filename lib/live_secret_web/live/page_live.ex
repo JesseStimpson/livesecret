@@ -52,18 +52,23 @@ defmodule LiveSecretWeb.PageLive do
           <%= case @special_action do %>
           <% :decrypting -> %>
             <% secret = read_secret_for_decrypt(@id) %>
-            <.decrypt_modal secret={secret} />
+            <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
           <% _ -> %>
           <% end %>
 
           <%= case @live_action do %>
           <% :create -> %>
-            <SecretFormComponent.create changeset={@changeset} durations={Presecret.supported_durations()}/>
+            <SecretFormComponent.create changeset={@changeset} modes={Presecret.supported_modes()}, durations={Presecret.supported_durations()}/>
           <% :admin -> %>
 
             <div class="p-4">
               <%= unless is_nil(@current_user) do %>
-                <LiveSecretWeb.UserListComponent.view self={@current_user.id} live_action={@live_action} users={@users} burned_at={@burned_at} />
+                <LiveSecretWeb.UserListComponent.view
+                  self={@current_user.id}
+                  live_action={@live_action}
+                  users={@users}
+                  burned_at={@burned_at}
+                  />
               <% end %>
             </div>
 
@@ -132,7 +137,7 @@ defmodule LiveSecretWeb.PageLive do
                 <p class="text-sm text-gray-500">Paste the passphrase into this box and click 'Decrypt'. The secret content will be shown if the passphrase is correct.</p>
               </div>
               <div class="pt-2" phx-update="ignore" id="passphrase-div-for-ignore">
-                <input type="text" name="passphrase" id="passphrase" class="[-webkit-text-security:square] focus:[-webkit-text-security:none] block w-full rounded-full border-gray-300 px-4 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Passphrase">
+                <input type="text" name="passphrase" id="passphrase" class="block w-full rounded-full border-gray-300 px-4 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Passphrase">
               </div>
             </div>
           </div>
@@ -144,10 +149,15 @@ defmodule LiveSecretWeb.PageLive do
             <input type="hidden" id="iv" value={:base64.encode(@secret.iv)} >
           </div>
           <div id="cleartext-div-for-ignore" phx-update="ignore">
-            <textarea id="cleartext" hidden readonly class="[-webkit-text-security:square] h-24 focus:[-webkit-text-security:none] pt-3 block w-full resize-none border-0 py-0 placeholder-gray-500 focus:ring-0"/>
+            <textarea id="cleartext" hidden readonly class="h-24 pt-3 block w-full resize-none border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono"/>
           </div>
 
-          <div class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
+          <%# phx-change="burn" will send the "burn" event as soon as the field is updated by app.js. There is no form submission %>
+          <.form let={f} for={@changeset} phx-change="burn">
+          <%= hidden_input f, :burn_key, id: "burnkey" %>
+          </.form>
+
+          <div id="decrypt-btns-div-for-ignore" phx-update="ignore" class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3">
             <button type="button" id="decrypt-btn" class="inline-flex w-full justify-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 sm:col-start-2 sm:text-sm"
             phx-click={JS.dispatch("live-secret:decrypt-secret")}
             >Decrypt</button>
@@ -188,7 +198,7 @@ defmodule LiveSecretWeb.PageLive do
       >
       <%= if is_nil(@burned_at) do %>
                 <div class="px-4 py-5 sm:p-6" id="instructions-div-for-ignore" phx-update="ignore">
-                  <pre id="instructions" phx-hook="GenerateInstructions">
+                  <pre id="instructions" class="font-mono" phx-hook="GenerateInstructions">
                   </pre>
                 </div>
       <% end %>
@@ -252,23 +262,23 @@ defmodule LiveSecretWeb.PageLive do
 
   @impl true
   def mount(%{"id" => id, "key" => key}, %{}, socket = %{assigns: %{live_action: :admin}}) do
-    %Secret{burned_at: burned_at} = LiveSecret.Repo.get!(Secret, id)
+    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
 
     {:ok,
      socket
      |> assert_creator_key(id, key)
      |> assign_current_user()
-     |> assign(id: id, creator_key: key, burned_at: burned_at, special_action: nil)
+     |> assign(id: id, creator_key: key, burned_at: burned_at, special_action: nil, live?: live?)
      |> detect_presence()}
   end
 
   def mount(%{"id" => id}, %{}, socket = %{assigns: %{live_action: :receiver}}) do
-    %Secret{burned_at: burned_at} = LiveSecret.Repo.get!(Secret, id)
+    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
 
     {:ok,
      socket
      |> assign_current_user()
-     |> assign(id: id, burned_at: burned_at, special_action: nil)
+     |> assign(id: id, burned_at: burned_at, special_action: nil, live?: live?)
      |> detect_presence()}
   end
 
@@ -278,15 +288,13 @@ defmodule LiveSecretWeb.PageLive do
     {:ok,
      socket
      |> assign_current_user()
-     |> assign(id: nil, burned_at: nil, special_action: nil)
+     |> assign(id: nil, burned_at: nil, special_action: nil, live?: true)
      |> assign(changeset: changeset)}
   end
 
   @impl true
 
-  @doc """
-  Validates form data during secret creation
-  """
+  # Validates form data during secret creation
   def handle_event(
         "validate",
         %{"presecret" => attrs},
@@ -300,9 +308,7 @@ defmodule LiveSecretWeb.PageLive do
     {:noreply, assign(socket, changeset: changeset)}
   end
 
-  @doc """
-  Submit form data for secret creation
-  """
+  # Submit form data for secret creation
   def handle_event("create", %{"presecret" => attrs}, socket) do
     attrs = Presecret.make_secret_attrs(attrs)
 
@@ -311,17 +317,21 @@ defmodule LiveSecretWeb.PageLive do
       |> Secret.changeset(attrs)
       |> LiveSecret.Repo.insert()
 
-    %Secret{id: id, creator_key: creator_key, burned_at: burned_at} = secret
+    %Secret{id: id, creator_key: creator_key, burned_at: burned_at, live?: live?} = secret
 
     {:noreply,
      socket
-     |> assign(id: id, creator_key: creator_key, changeset: nil, burned_at: burned_at)
+     |> assign(
+       id: id,
+       creator_key: creator_key,
+       changeset: nil,
+       burned_at: burned_at,
+       live?: live?
+     )
      |> push_patch(to: Routes.page_path(socket, :admin, id, %{key: creator_key}))}
   end
 
-  @doc """
-  Unlock a specific user for content decryption
-  """
+  # Unlock a specific user for content decryption
   def handle_event(
         "unlock",
         %{"id" => user_id},
@@ -333,14 +343,30 @@ defmodule LiveSecretWeb.PageLive do
     {:noreply, socket}
   end
 
-  @doc """
-  Burn the secret so that no one else can access it
-  """
-  def handle_event("burn", _params, socket = %{assigns: %{id: id, current_user: current_user}}) do
+  # Burn the secret so that no one else can access it
+  def handle_event(
+        "burn",
+        params,
+        socket = %{assigns: %{id: id, current_user: current_user, live_action: live_action}}
+      ) do
+    secret = LiveSecret.Repo.get!(Secret, id)
+
+    # Assert allowed to burn
+    case live_action do
+      :admin ->
+        :ok
+
+      _ ->
+        burn_key = params["secret"]["burn_key"]
+        ^burn_key = secret.burn_key
+    end
+
     burned_at = NaiveDateTime.utc_now()
 
-    LiveSecret.Repo.get!(Secret, id)
+    secret
     |> Secret.changeset(%{
+      burn_key: nil,
+      iv: nil,
       burned_at: burned_at,
       content: nil
     })
@@ -356,48 +382,40 @@ defmodule LiveSecretWeb.PageLive do
     {:noreply,
      socket
      |> assign(burned_at: burned_at)
-     |> put_flash(:info, "Encrypted content deleted from LiveSecret server. Close this window.")}
+     |> put_burn_flash()}
   end
 
-  @doc """
-  Catch-all for dev purposes
-  """
+  # Catch-all for dev purposes
   def handle_event(event, params, socket) do
     IO.inspect({event, params})
     {:noreply, socket}
   end
 
   @impl true
-  @doc """
-  Handle the push_patch after secret creation. We use a patch so that the DOM doesn't get
-  reset. This allows the client browser to hold onto the passphrase so the instructions
-  can be generated.
-  """
+  # Handle the push_patch after secret creation. We use a patch so that the DOM doesn't get
+  # reset. This allows the client browser to hold onto the passphrase so the instructions
+  # can be generated.
   def handle_params(
         %{"id" => id, "key" => key},
         _url,
         socket = %{assigns: %{live_action: :admin}}
       ) do
-    %Secret{burned_at: burned_at} = LiveSecret.Repo.get!(Secret, id)
+    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
 
     {:noreply,
      socket
      |> assert_creator_key(id, key)
-     |> assign(id: id, creator_key: key, burned_at: burned_at)
+     |> assign(id: id, creator_key: key, burned_at: burned_at, live?: live?)
      |> detect_presence()}
   end
 
-  @doc """
-  Catch-all for dev
-  """
+  # Catch-all for dev
   def handle_params(_, _, socket) do
     {:noreply, socket}
   end
 
   @impl true
-  @doc """
-  Handles presences -- users coming online and offline from the page
-  """
+  # Handles presence -- users coming online and offline from the page
   def handle_info(%Phoenix.Socket.Broadcast{event: "presence_diff", payload: diff}, socket) do
     {
       :noreply,
@@ -407,10 +425,8 @@ defmodule LiveSecretWeb.PageLive do
     }
   end
 
-  @doc """
-  Broadcast to all listeners when a user is unlocked. However, only the specific user
-  should do anything with it.
-  """
+  # Broadcast to all listeners when a user is unlocked. However, only the specific user
+  # should do anything with it.
   def handle_info(
         {"unlocked", user_id},
         socket = %{assigns: %{current_user: current_user, id: id, users: users}}
@@ -438,9 +454,7 @@ defmodule LiveSecretWeb.PageLive do
     end
   end
 
-  @doc """
-  All subscribers are informed the secret has been burned
-  """
+  # All subscribers are informed the secret has been burned
   def handle_info(
         {"burned", burned_by, burned_at},
         socket = %{assigns: %{current_user: current_user}}
@@ -453,16 +467,11 @@ defmodule LiveSecretWeb.PageLive do
         {:noreply,
          socket
          |> assign(burned_at: burned_at)
-         |> put_flash(
-           :error,
-           "The secret has been deleted by an Admin. Please close this window."
-         )}
+         |> put_burn_flash()}
     end
   end
 
-  @doc """
-  Catch-all for dev
-  """
+  # Catch-all for dev
   def handle_info(info, socket) do
     IO.inspect(info, label: "info")
     {:noreply, socket}
@@ -511,7 +520,7 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def detect_presence(
-        socket = %{assigns: %{current_user: user, id: id, live_action: live_action}}
+        socket = %{assigns: %{current_user: user, id: id, live_action: live_action, live?: live?}}
       )
       when not is_nil(user) do
     topic = topic(id)
@@ -519,8 +528,16 @@ defmodule LiveSecretWeb.PageLive do
     active_user = %ActiveUser{
       id: user[:id],
       live_action: live_action,
-      joined_at: NaiveDateTime.utc_now()
+      joined_at: NaiveDateTime.utc_now(),
+      state: if(live?, do: :locked, else: :unlocked)
     }
+
+    special_action =
+      case {live_action, active_user.state} do
+        {_, :locked} -> nil
+        {:admin, _} -> nil
+        {:receiver, :unlocked} -> :decrypting
+      end
 
     presence_pid =
       case LiveSecretWeb.Presence.track(self(), topic, user[:id], active_user) do
@@ -534,7 +551,11 @@ defmodule LiveSecretWeb.PageLive do
     :ok = Phoenix.PubSub.subscribe(LiveSecret.PubSub, topic)
 
     socket
-    |> assign(users: %{user.id => active_user}, presence: presence_pid)
+    |> assign(
+      users: %{user.id => active_user},
+      presence: presence_pid,
+      special_action: special_action
+    )
     |> handle_joins(LiveSecretWeb.Presence.list(topic))
   end
 
@@ -586,5 +607,21 @@ defmodule LiveSecretWeb.PageLive do
 
   defp read_secret_for_decrypt(id) do
     LiveSecret.Repo.get!(Secret, id)
+  end
+
+  def put_burn_flash(socket = %{assigns: %{live_action: :admin}}) do
+    socket
+    |> put_flash(
+      :info,
+      "Burned. Encrypted content deleted from LiveSecret server. Close this window."
+    )
+  end
+
+  def put_burn_flash(socket = %{assigns: %{live_action: :receiver}}) do
+    socket
+    |> put_flash(
+      :info,
+      "The secret content has been deleted from the server. Please close this window."
+    )
   end
 end
