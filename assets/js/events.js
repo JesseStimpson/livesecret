@@ -27,9 +27,7 @@ async function CreateSecret(event) {
   var userkey = null;
   if (passphrase.value == "") {
     console.log("Generating passphrase...");
-    encryptionkey = await generateKey();
-    var rawkey = await exportKey(encryptionkey);
-    userkey = arrayBufferToBase64(rawkey);
+    userkey = await Encryption.GeneratePassphrase();
 
   } else {
     console.log("Found user provided passphrase");

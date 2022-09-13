@@ -66,6 +66,13 @@ function base64ToArrayBuffer(base64) {
   return bytes.buffer;
 }
 
+const GeneratePassphrase = async function() {
+    var encryptionkey = await generateKey();
+    var rawkey = await exportKey(encryptionkey);
+    userkey = arrayBufferToBase64(rawkey);
+    return userkey;
+}
+
 const EncryptSecret = async function(userkey, ivVal, burnkey, cleartextVal) {
 
   var encoder = new TextEncoder();
@@ -103,6 +110,7 @@ const DecryptSecret = async function(userkey, ivVal, ciphertextVal) {
 }
 
 let Encryption = {
+    GeneratePassphrase: GeneratePassphrase,
     EncryptSecret: EncryptSecret,
     DecryptSecret: DecryptSecret
 }
