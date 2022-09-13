@@ -65,7 +65,7 @@ the cleartext is revealed only to the expected recipient.
 Once burned, the URL can still be visited, but there are no actions to be taken by any party. A
 burned secret is essentially a tombstone.
 
-### Link expiration
+### Link expiration (not yet implemented)
 When you author a secret, you choose the expiration period for all the information stored on the
 server (ciphertext, iv, and metadata). After the expiration period, all this information will be
 deleted from the server database. If a user visits the URL for this secret after the expiration,
@@ -95,3 +95,11 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Docs: https://hexdocs.pm/phoenix
   * Forum: https://elixirforum.com/c/phoenix-forum
   * Source: https://github.com/phoenixframework/phoenix
+
+## Next
+1. Implement link expiration and 404 page
+2. Update UX/UI in the Recipient view (including Decryption Modal)
+3. Ability to disable Live mode from Admin view
+4. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
+5. Diceware-like passphrase generatation from JS
+6. Change "Joined at" to "Joined since" and update incrementing counter
