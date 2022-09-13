@@ -153,7 +153,7 @@ defmodule LiveSecretWeb.PageLive do
           </div>
 
           <%# phx-change="burn" will send the "burn" event as soon as the field is updated by app.js. There is no form submission %>
-          <.form let={f} for={@changeset} phx-change="burn">
+          <.form let={f} for={@changeset} phx-change="burn" autocomplete="off">
           <%= hidden_input f, :burn_key, id: "burnkey" %>
           </.form>
 
@@ -347,7 +347,7 @@ defmodule LiveSecretWeb.PageLive do
   def handle_event(
         "burn",
         params,
-        socket = %{assigns: %{id: id, current_user: current_user, live_action: live_action}}
+        socket = %{assigns: %{id: id, current_user: current_user, live_action: live_action, users: users}}
       ) do
     secret = LiveSecret.Repo.get!(Secret, id)
 
@@ -378,6 +378,17 @@ defmodule LiveSecretWeb.PageLive do
         topic(id),
         {"burned", current_user.id, burned_at}
       )
+
+    case live_action do
+      :receiver ->
+        # change state to revealed
+        active_user = users[current_user.id]
+        LiveSecretWeb.Presence.update(self(), topic(id), current_user.id, %ActiveUser{
+          active_user | state: :revealed
+          })
+      _ ->
+        :ok
+    end
 
     {:noreply,
      socket
@@ -478,8 +489,6 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   defp handle_joins(socket, joins) do
-    IO.inspect(joins, label: "joins")
-
     Enum.reduce(joins, socket, fn {user_id, %{metas: [active_user = %ActiveUser{} | _]}},
                                   socket ->
       assign(socket, :users, Map.put(socket.assigns.users, user_id, active_user))

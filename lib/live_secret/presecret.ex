@@ -31,7 +31,6 @@ defmodule LiveSecret.Presecret do
           "mode" => mode
         }
       ) do
-    IO.inspect(attrs)
     now = NaiveDateTime.utc_now()
 
     %{

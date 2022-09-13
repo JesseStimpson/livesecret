@@ -5,7 +5,7 @@ defmodule LiveSecretWeb.SecretFormComponent do
 
   def create(assigns) do
     ~H"""
-    <.form let={f} for={@changeset} action="#" class="relative" id="secret-form" phx-change="validate" phx-submit="create">
+    <.form let={f} for={@changeset} action="#" class="relative" id="secret-form" phx-change="validate" phx-submit="create" autocomplete="off">
       <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
         <%= label f, :content, class: "block text-xs font-medium text-gray-700 pt-2 px-2"%>
         <div phx-update="ignore" id="cleartext-div-for-ignore">
@@ -38,9 +38,9 @@ defmodule LiveSecretWeb.SecretFormComponent do
   def param_choice(assigns) do
     ~H"""
     <div class="flex-shrink-0">
-      <label id="listbox-label" class="sr-only"> Add an expiration </label>
+      <label id={"listbox-label-#{@field}"} class="sr-only"> Add an expiration </label>
       <div class="relative">
-        <button type="button" class="relative inline-flex items-center whitespace-nowrap rounded-full bg-gray-50 py-2 px-2 text-sm font-medium text-gray-500 hover:bg-gray-100 sm:px-3" aria-haspopup="listbox" aria-expanded="true" aria-labelledby="listbox-label"
+        <button type="button" class="relative inline-flex items-center whitespace-nowrap rounded-full bg-gray-50 py-2 px-2 text-sm font-medium text-gray-500 hover:bg-gray-100 sm:px-3" aria-haspopup="listbox" aria-expanded="true" aria-labelledby={"listbox-label-#{@field}"}
           phx-click={ JS.toggle( to: "##{@field}-popover") }
         >
           <% choice = Ecto.Changeset.fetch_field!(@changeset, @field) %>
@@ -49,7 +49,7 @@ defmodule LiveSecretWeb.SecretFormComponent do
           <%= hidden_input @f, @field, id: "#{@field}" %>
         </button>
 
-        <ul id={"#{@field}-popover"} class="hidden absolute right-0 z-10 mt-1 max-h-56 w-52 overflow-auto rounded-lg bg-white py-3 text-base shadow ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm" tabindex="-1" role="listbox" aria-labelledby="listbox-label" aria-activedescendant="listbox-option-0"
+        <ul id={"#{@field}-popover"} class="hidden absolute right-0 z-10 mt-1 max-h-56 w-52 overflow-auto rounded-lg bg-white py-3 text-base shadow ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm" tabindex="-1" role="listbox" aria-labelledby={"listbox-label-#{@field}"} aria-activedescendant="listbox-option-0"
           phx-click-away={JS.hide(to: "##{@field}-popover")}
         >
           <%= for item <- @list do %>
