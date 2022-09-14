@@ -54,12 +54,56 @@ window.addEventListener("error", (event) => {
 
 window.addEventListener("live-secret:clipcopy", (event) => {
   if ("clipboard" in navigator) {
-    var instructionsEl = document.getElementById("instructions");
-    const text = instructionsEl.textContent;
-    navigator.clipboard.writeText(text);
+    const text = event.target.value;
+    if (text == "") {
+
+    } else {
+      navigator.clipboard.writeText(text);
+      event.target.classList.add("flash");
+      setTimeout(() => {
+        event.target.classList.remove("flash");
+      }, 200);
+
+    }
   } else {
     alert("Sorry, your browser does not support clipboard copy.");
   }
+});
+
+window.addEventListener("live-secret:clipcopy-instructions", (event) => {
+  console.log("Generating instructions...");
+  var userkeyStashEl = document.getElementById("userkey-stash");
+
+  var flashUserkey = true;
+
+  var passphrase = userkeyStashEl.value;
+  if (userkeyStashEl.value === "") {
+    passphrase = "<Admin must provide the passphrase>";
+    flashUserkey = false;
+  }
+
+  var oobUrlEl = document.getElementById("oob-url");
+  var instructions = `1. Open this link in your browser
+`+ oobUrlEl.value + `
+2. When prompted, enter the following passphrase
+`+ passphrase + `
+`.trim()
+
+  if ("clipboard" in navigator) {
+    navigator.clipboard.writeText(instructions);
+    oobUrlEl.classList.add("flash");
+    if (flashUserkey) {
+      userkeyStashEl.classList.add("flash");
+    }
+
+    setTimeout(() => {
+      oobUrlEl.classList.remove("flash");
+      userkeyStashEl.classList.remove("flash");
+    }, 200);
+  } else {
+    alert("Sorry, your browser does not support clipboard copy.");
+  }
+
 });
 
 window.addEventListener("live-secret:select-choice", (event) => {

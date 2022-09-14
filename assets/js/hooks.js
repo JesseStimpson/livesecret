@@ -1,7 +1,7 @@
-import GenerateInstructions from "./hooks/generateInstructions"
+import ShowPassphraseAfterCreate from "./hooks/showPassphraseAfterCreate"
 
 let Hooks = {
-  GenerateInstructions: GenerateInstructions
+  ShowPassphraseAfterCreate: ShowPassphraseAfterCreate
 }
 
 export default Hooks;

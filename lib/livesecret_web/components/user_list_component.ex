@@ -158,11 +158,12 @@ defmodule LiveSecretWeb.UserListComponent do
     <%= case {@active_user.live_action, @active_user.state, ActiveUser.connected?(@active_user)} do %>
     <% {:receiver, :locked, true} -> %>
 
+    <% enabled = not (@force_disable or @live_action != :admin) %>
     <button
       type="button"
-      disabled={@force_disable or @live_action != :admin}
+      disabled={not enabled}
       class={class}
-      phx-click={if @live_action == :admin, do: "unlock", else: ""}
+      phx-click={if enabled and @live_action == :admin, do: "unlock", else: ""}
       phx-value-id={@active_user.id}
       >
       <.badge_icon id={:lock} />

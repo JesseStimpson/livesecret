@@ -10,15 +10,6 @@ defmodule LiveSecretWeb.PageLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <!-- This example requires Tailwind CSS v2.0+ -->
-    <!--
-      This example requires updating your template:
-
-      ```
-      <html class="h-full bg-gray-100">
-      <body class="h-full">
-      ```
-    -->
     <div class="min-h-full">
     <div class="bg-gray-800 pb-32">
       <header class="py-10">
@@ -30,17 +21,7 @@ defmodule LiveSecretWeb.PageLive do
 
     <main class="-mt-32">
       <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
-        <!-- Replace with your content -->
         <div class="rounded-lg bg-white px-5 py-6 shadow sm:px-6">
-
-          <%= if @live_action == :create or @live_action == :admin do %>
-            <!-- The encrypting passphase (either generated or user provided) is never transmitted to the server
-                 so in order for the app.js to maintain temporary access to the value, we stash it in a location
-                 that survives page updates from phx. app.js is responsible for managing this field safely -->
-            <div phx-update="ignore" id="userkey-stash-div-for-ignore">
-              <input type="hidden" id="userkey-stash">
-            </div>
-          <% end %>
 
           <%= unless is_nil(@id) do %>
           <LiveSecretWeb.BreadcrumbComponent.show
@@ -60,10 +41,15 @@ defmodule LiveSecretWeb.PageLive do
 
           <%= case @live_action do %>
           <% :create -> %>
+
+            <.secret_links live_action={@live_action} to={Routes.page_path(@socket, :receiver, "dne")} enabled={is_nil(@burned_at)}/>
+
             <SecretFormComponent.create changeset={@changeset} modes={Presecret.supported_modes()}, durations={Presecret.supported_durations()}/>
             <.section_header>Help</.section_header>
             <.help live_action={@live_action}/>
           <% :admin -> %>
+
+            <.secret_links live_action={@live_action} to={Routes.page_path(@socket, :receiver, @id)} enabled={is_nil(@burned_at)}/>
 
             <.section_header >Online now</.section_header>
             <div class="py-4">
@@ -78,16 +64,10 @@ defmodule LiveSecretWeb.PageLive do
               <% end %>
             </div>
 
-          <% url = Application.fetch_env!(:livesecret, LiveSecretWeb.Endpoint)[:url] %>
-          <% scheme = (url[:scheme] || "http") %>
-          <% host = (url[:host] || "localhost") %>
-          <% port = (url[:port] || 4000) %>
-          <input type="hidden" id="oob-url", value={build_external_url(scheme, host, port, Routes.page_path(@socket, :receiver, @id))}>
-
-            <.section_header>Actions</.section_header>
-            <div class="py-4">
-            <.action_panel burned_at={@burned_at} />
-            </div>
+          <.section_header>Actions</.section_header>
+          <div class="py-4">
+          <.action_panel burned_at={@burned_at} />
+          </div>
 
           <% :receiver -> %>
             <.section_header>Online now</.section_header>
@@ -101,10 +81,67 @@ defmodule LiveSecretWeb.PageLive do
             <.help live_action={@live_action}/>
           <% end %>
         </div>
-        <!-- /End replace -->
       </div>
     </main>
     </div>
+    """
+  end
+
+  defp secret_links(assigns) do
+    ~H"""
+    <% container_class = if @live_action == :create, do: "", else: "pt-8 px-8 pb-2" %>
+    <div class={container_class}>
+      <% url = Application.fetch_env!(:livesecret, LiveSecretWeb.Endpoint)[:url] %>
+      <% scheme = (url[:scheme] || "http") %>
+      <% host = (url[:host] || "localhost") %>
+      <% port = (url[:port] || 4000) %>
+      <% oob_url = build_external_url(scheme, host, port, @to) %>
+      <ul>
+      <%= if @live_action == :admin do %>
+        <div class="w-full flex justify-center items-center align-center">
+        <button type="button" class={"text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500 inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "<> if @enabled, do: "", else: "line-through"}
+        phx-click={JS.dispatch("live-secret:clipcopy-instructions")}
+        disabled={not @enabled}
+        >
+        Copy as Markdown
+        <.action_icon has_text={true} id={:markdown} />
+        </button>
+        <%= if @enabled do %>
+          <div id="show-passphrase-after-create" phx-hook="ShowPassphraseAfterCreate" ></div>
+        <% end %>
+        </div>
+        <.copiable id="oob-url" type={:text} value={oob_url} ignore={false} enabled={@enabled} placeholder=""/>
+      <% end %>
+        <% input_type = if @live_action == :create, do: :hidden, else: :text %>
+        <.copiable id="userkey-stash" type={input_type} value="" ignore={true} enabled={@enabled} placeholder="<Admin must provide the passphrase>" />
+      </ul>
+    </div>
+    """
+  end
+
+  defp copiable(assigns) do
+    ~H"""
+    <li class="flex flex-nowrap my-2">
+
+    <%= unless @type == :hidden do %>
+      <button type="button" disabled={not @enabled} class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm"
+      phx-click={if @enabled, do: JS.dispatch("live-secret:clipcopy", to: "##{@id}")}
+      >
+      <.action_icon has_text={false} id={:clipboard} />
+      </button>
+    <% end %>
+
+    <% input_class = "font-mono block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-700 hover:text-gray-900" %>
+
+    <%= if @ignore do %>
+      <div phx-update="ignore" id={@id <> "-div-for-ignore"} class="w-full">
+        <input type={@type} id={@id} disabled class={input_class} value={@value} placeholder={@placeholder} >
+      </div>
+    <% else %>
+      <input type={@type} id={@id} disabled class={input_class} value={@value} placeholder={@placeholder} >
+    <% end %>
+
+    </li>
     """
   end
 
@@ -118,7 +155,6 @@ defmodule LiveSecretWeb.PageLive do
 
   defp decrypt_modal(assigns) do
     ~H"""
-    <!-- This example requires Tailwind CSS v2.0+ -->
     <div id="decrypt-modal" class="relative z-10" aria-labelledby="modal-title" role="dialog" aria-modal="true">
     <!--
       Background backdrop, show/hide based on modal state.
@@ -195,34 +231,17 @@ defmodule LiveSecretWeb.PageLive do
 
   defp action_panel(assigns) do
     ~H"""
-    <!-- This example requires Tailwind CSS v2.0+ -->
     <ul role="list" class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
 
       <.action_item
       title="Burn this secret"
       description="When you burn the secret, the encrypted data is deleted forever."
       action_enabled={is_nil(@burned_at)}
-      action_text="Burn secret"
+      action_text="Burn"
       action_icon={:fire}
       action_class="text-red-700 bg-red-100 hover:bg-red-200 focus:ring-red-500"
       action_click="burn"
       >
-      </.action_item>
-      <.action_item
-      title="Copy instructions"
-      description="The recipient needs this information to decrypt the secret."
-      action_enabled={is_nil(@burned_at)}
-      action_text="Copy"
-      action_icon={:clipboard}
-      action_class="text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
-      action_click={JS.dispatch("live-secret:clipcopy")}
-      >
-      <%= if is_nil(@burned_at) do %>
-                <div class="px-4 py-5 sm:p-6" id="instructions-div-for-ignore" phx-update="ignore">
-                  <pre id="instructions" class="font-mono" phx-hook="GenerateInstructions">
-                  </pre>
-                </div>
-      <% end %>
       </.action_item>
     </ul>
     """
@@ -241,12 +260,12 @@ defmodule LiveSecretWeb.PageLive do
       </div>
       <div class="inline-flex w-full items-center justify-center pb-4">
         <button type="button" class={"#{@action_class} inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "<> if @action_enabled, do: "", else: "line-through"}
-        phx-click={@action_click}
+        phx-click={if @action_enabled, do: @action_click}
         disabled={not @action_enabled}
         >
         <%= @action_text %>
         <%= unless is_nil(@action_icon) do %>
-        <.action_icon id={@action_icon} />
+        <.action_icon has_text={true} id={@action_icon} />
         <% end %>
         </button>
       </div>
@@ -259,16 +278,22 @@ defmodule LiveSecretWeb.PageLive do
 
   defp action_icon(assigns) do
     ~H"""
+    <% margin_for_left_text = if @has_text, do: "ml-2", else: "-ml-1" %>
     <%= case @id do %>
     <% :fire -> %>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-2 -mr-1 w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
       <path fill-rule="evenodd" d="M13.5 4.938a7 7 0 11-9.006 1.737c.202-.257.59-.218.793.039.278.352.594.672.943.954.332.269.786-.049.773-.476a5.977 5.977 0 01.572-2.759 6.026 6.026 0 012.486-2.665c.247-.14.55-.016.677.238A6.967 6.967 0 0013.5 4.938zM14 12a4 4 0 01-4 4c-1.913 0-3.52-1.398-3.91-3.182-.093-.429.44-.643.814-.413a4.043 4.043 0 001.601.564c.303.038.531-.24.51-.544a5.975 5.975 0 011.315-4.192.447.447 0 01.431-.16A4.001 4.001 0 0114 12z" clip-rule="evenodd" />
     </svg>
     <% :clipboard -> %>
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="ml-2 -mr-1 w-5 h-5">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
     <path fill-rule="evenodd" d="M10.5 3A1.501 1.501 0 009 4.5h6A1.5 1.5 0 0013.5 3h-3zm-2.693.178A3 3 0 0110.5 1.5h3a3 3 0 012.694 1.678c.497.042.992.092 1.486.15 1.497.173 2.57 1.46 2.57 2.929V19.5a3 3 0 01-3 3H6.75a3 3 0 01-3-3V6.257c0-1.47 1.073-2.756 2.57-2.93.493-.057.989-.107 1.487-.15z" clip-rule="evenodd" />
 
     </svg>
+    <% :markdown -> %>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 128" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
+      <path fill-rule="evenodd" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0l-30-33h20V30h20v35h20z"/>
+    </svg>
+
     <% end %>
     """
   end
@@ -297,8 +322,8 @@ defmodule LiveSecretWeb.PageLive do
       <p class="pt-1 mt-1 text-sm text-gray-500">
       <ol type="1" class="list-decimal ml-8">
         <li class="pt-1 mt-1 text-sm text-gray-500">Enter secret data into the box above.</li>
-        <li class="pt-1 mt-1 text-sm text-gray-500">Enter a custom passphrase for client-side encryption. (optional)</li>
-        <li class="pt-1 mt-1 text-sm text-gray-500">After Encrypting, send the provided instructions to the recipient.</li>
+        <li class="pt-1 mt-1 text-sm text-gray-500">Click Encrypt. The data is encrypted locally, and stored on the server. The passphrase is not.</li>
+        <li class="pt-1 mt-1 text-sm text-gray-500">You send the provided instructions to the recipient out-of-band.</li>
         <li class="pt-1 mt-1 text-sm text-gray-500">Unlock the intended recipient when you see they have arrived on the page.</li>
       </ol>
       </p>
