@@ -61,9 +61,13 @@ defmodule LiveSecretWeb.PageLive do
           <%= case @live_action do %>
           <% :create -> %>
             <SecretFormComponent.create changeset={@changeset} modes={Presecret.supported_modes()}, durations={Presecret.supported_durations()}/>
+            <.section_header>Help</.section_header>
+            <.help live_action={@live_action}/>
           <% :admin -> %>
 
-            <div class="p-4">
+            <.section_header >Online now</.section_header>
+            <div class="py-4">
+
               <%= unless is_nil(@current_user) do %>
                 <LiveSecretWeb.UserListComponent.view
                   self={@current_user.id}
@@ -80,19 +84,34 @@ defmodule LiveSecretWeb.PageLive do
           <% port = (url[:port] || 4000) %>
           <input type="hidden" id="oob-url", value={build_external_url(scheme, host, port, Routes.page_path(@socket, :receiver, @id))}>
 
+            <.section_header>Actions</.section_header>
+            <div class="py-4">
             <.action_panel burned_at={@burned_at} />
+            </div>
 
           <% :receiver -> %>
-            <div class="p-4">
+            <.section_header>Online now</.section_header>
+            <div class="py-4">
+
               <%= unless is_nil(@current_user) do %>
                 <LiveSecretWeb.UserListComponent.view self={@current_user.id} live_action={@live_action} users={@users} burned_at={@burned_at} />
               <% end %>
             </div>
+            <.section_header>Help</.section_header>
+            <.help live_action={@live_action}/>
           <% end %>
         </div>
         <!-- /End replace -->
       </div>
     </main>
+    </div>
+    """
+  end
+
+  defp section_header(assigns) do
+    ~H"""
+    <div class="mx-auto max-w-7xl pt-4 px-4">
+      <h2 class="text-lg font-bold leading-tight tracking-tight text-gray-900"><%= render_slot(@inner_block) %></h2>
     </div>
     """
   end
@@ -177,7 +196,7 @@ defmodule LiveSecretWeb.PageLive do
   defp action_panel(assigns) do
     ~H"""
     <!-- This example requires Tailwind CSS v2.0+ -->
-    <ul role="list" class="grid grid-cols-1 gap-6 sm:grid-cols-1 lg:grid-cols-2">
+    <ul role="list" class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
 
       <.action_item
       title="Burn this secret"
@@ -213,11 +232,11 @@ defmodule LiveSecretWeb.PageLive do
     ~H"""
     <li class="col-span-1 rounded-lg bg-white shadow">
       <div class="flex w-full items-center justify-between space-x-6 p-6">
-        <div class="flex-1 truncate">
+        <div class="flex-1">
           <div class="flex items-center space-x-3">
             <h3 class="truncate text-sm font-medium text-gray-900"><%= @title %></h3>
           </div>
-          <p class="mt-1 truncate text-sm text-gray-500"><%= @description %></p>
+          <p class="mt-1 text-sm text-gray-500"><%= @description %></p>
         </div>
       </div>
       <div class="inline-flex w-full items-center justify-center pb-4">
@@ -254,6 +273,47 @@ defmodule LiveSecretWeb.PageLive do
     """
   end
 
+  defp help(assigns) do
+    ~H"""
+    <div class="p-4 flex-1">
+      <div class="flex items-center space-x-3">
+        <h3 class="text-sm font-medium text-gray-900">What is this?</h3>
+      </div>
+      <p class="pt-1 mt-1 text-sm text-gray-500">
+      LiveSecret allows two people to securely exchange
+      <a class="underline" href="https://en.wikipedia.org/wiki/Shared_secret">shared secrets</a> using
+      <a class="underline" href="https://en.wikipedia.org/wiki/End-to-end_encryption">end-to-end encryption</a>.
+      <%= if @live_action == :receiver do %>
+      Since you're here it means that someone you trust sent you a link and a passphrase.
+      <p class="pt-1 mt-1 text-sm text-gray-500">
+      When the author of the secret is ready, they will unlock your page, and you will be prompted for the passphrase.</p>
+      <% end %>
+      </p>
+
+      <%= if @live_action == :create do %>
+      <div class="pt-4 flex items-center space-x-3">
+        <h3 class="text-sm font-medium text-gray-900">How does it work?</h3>
+      </div>
+      <p class="pt-1 mt-1 text-sm text-gray-500">
+      <ol type="1" class="list-decimal ml-8">
+        <li class="pt-1 mt-1 text-sm text-gray-500">Enter secret data into the box above.</li>
+        <li class="pt-1 mt-1 text-sm text-gray-500">Enter a custom passphrase for client-side encryption. (optional)</li>
+        <li class="pt-1 mt-1 text-sm text-gray-500">After Encrypting, send the provided instructions to the recipient.</li>
+        <li class="pt-1 mt-1 text-sm text-gray-500">Unlock the intended recipient when you see they have arrived on the page.</li>
+      </ol>
+      </p>
+      <% end %>
+
+      <div class="pt-4 flex items-center space-x-3">
+        <h3 class="text-sm font-medium text-gray-900">Can I learn more?</h3>
+      </div>
+      <p class="pt-1 mt-1 text-sm text-gray-500">
+      Please see the <a class="underline" href="https://github.com/JesseStimpson/livesecret">LiveSecret</a> GitHub project.
+      </p>
+    </div>
+    """
+  end
+
   defp build_external_url("https", host, 443, path) do
     "https://#{host}#{path}"
   end
@@ -268,6 +328,7 @@ defmodule LiveSecretWeb.PageLive do
       %Secret{burned_at: burned_at, live?: live?} ->
         {:ok,
          socket
+         |> assign(page_title: "LiveSecret · Managing")
          |> assert_creator_key(id, key)
          |> assign_current_user()
          |> assign(
@@ -289,6 +350,7 @@ defmodule LiveSecretWeb.PageLive do
       %Secret{burned_at: burned_at, live?: live?} ->
         {:ok,
          socket
+         |> assign(page_title: "LiveSecret · Receiving")
          |> assign_current_user()
          |> assign(id: id, burned_at: burned_at, special_action: nil, live?: live?)
          |> detect_presence()}
@@ -303,6 +365,7 @@ defmodule LiveSecretWeb.PageLive do
 
     {:ok,
      socket
+     |> assign(page_title: "LiveSecret · Creating")
      |> assign_current_user()
      |> assign(id: nil, burned_at: nil, special_action: nil, live?: true)
      |> assign(changeset: changeset)}
@@ -344,6 +407,7 @@ defmodule LiveSecretWeb.PageLive do
        burned_at: burned_at,
        live?: live?
      )
+     |> assign(page_title: "LiveSecret · Managing")
      |> push_patch(to: Routes.page_path(socket, :admin, id, %{key: creator_key}))}
   end
 

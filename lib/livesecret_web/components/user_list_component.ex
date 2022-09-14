@@ -6,7 +6,7 @@ defmodule LiveSecretWeb.UserListComponent do
   def view(assigns) do
     ~H"""
     <!-- This example requires Tailwind CSS v2.0+ -->
-    <div class="overflow-hidden bg-white shadow sm:rounded-md">
+    <div class="overflow-hidden bg-white shadow rounded-md">
     <ul role="list" class="divide-y divide-gray-200">
       <%= for {user_id, active_user} <- sort_users(@users, @self) do %>
       <li>
@@ -22,7 +22,7 @@ defmodule LiveSecretWeb.UserListComponent do
                   <.dot active_user={active_user} />
                 </span>
               </div>
-              <div class="min-w-0 flex-1 px-4 md:grid md:grid-cols-2 md:gap-4">
+              <div class="min-w-0 flex-1 px-4">
                 <div>
                   <.user_role self={@self} active_user={active_user} />
 

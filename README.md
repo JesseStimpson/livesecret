@@ -7,7 +7,7 @@ library, [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleC
 
 ## Disclaimer
 LiveSecret has not undergone a third-party security audit, so it cannot provide
-any guarantees regarding the technical claims made by the author. As an administrator
+any guarantees regarding the technical claims made by the author. As a user
 of LiveSecret you alone are responsible for securing secret content.
 
 ## Features
