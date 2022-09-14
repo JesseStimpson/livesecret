@@ -6,7 +6,7 @@ defmodule LiveSecret.Expiration do
   alias LiveSecret.{Repo, Secret}
 
   def setup_job() do
-    config = Application.fetch_env!(:live_secret, LiveSecret.Expiration)
+    config = Application.fetch_env!(:livesecret, LiveSecret.Expiration)
     :timer.apply_interval(config[:interval], LiveSecret.Expiration, :expire, [])
   end
 

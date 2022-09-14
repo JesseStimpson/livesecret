@@ -72,7 +72,7 @@ defmodule LiveSecretWeb.PageLive do
               <% end %>
             </div>
 
-          <% url = Application.fetch_env!(:live_secret, LiveSecretWeb.Endpoint)[:url] %>
+          <% url = Application.fetch_env!(:livesecret, LiveSecretWeb.Endpoint)[:url] %>
           <% scheme = (url[:scheme] || "http") %>
           <% host = (url[:host] || "localhost") %>
           <% port = (url[:port] || 4000) %>

@@ -7,12 +7,12 @@
 # General application configuration
 import Config
 
-config :live_secret,
+config :livesecret,
   ecto_repos: [LiveSecret.Repo],
   generators: [binary_id: true]
 
 # Configures the endpoint
-config :live_secret, LiveSecretWeb.Endpoint,
+config :livesecret, LiveSecretWeb.Endpoint,
   url: [host: "localhost"],
   render_errors: [view: LiveSecretWeb.ErrorView, accepts: ~w(html json), layout: false],
   pubsub_server: LiveSecret.PubSub,

@@ -1,12 +1,12 @@
 defmodule LiveSecretWeb.Endpoint do
-  use Phoenix.Endpoint, otp_app: :live_secret
+  use Phoenix.Endpoint, otp_app: :livesecret
 
   # The session will be stored in the cookie and signed,
   # this means its contents can be read but not tampered with.
   # Set :encryption_salt if you would also like to encrypt it.
   @session_options [
     store: :cookie,
-    key: "_live_secret_key",
+    key: "_livesecret_key",
     signing_salt: "Om7DRo7v"
   ]
 
@@ -19,7 +19,7 @@ defmodule LiveSecretWeb.Endpoint do
   # when deploying your static files in production.
   plug Plug.Static,
     at: "/",
-    from: :live_secret,
+    from: :livesecret,
     gzip: false,
     only: ~w(assets fonts images favicon.ico robots.txt)
 
@@ -29,7 +29,7 @@ defmodule LiveSecretWeb.Endpoint do
     socket "/phoenix/live_reload/socket", Phoenix.LiveReloader.Socket
     plug Phoenix.LiveReloader
     plug Phoenix.CodeReloader
-    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :live_secret
+    plug Phoenix.Ecto.CheckRepoStatus, otp_app: :livesecret
   end
 
   plug Phoenix.LiveDashboard.RequestLogger,

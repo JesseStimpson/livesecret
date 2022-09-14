@@ -20,5 +20,5 @@ defmodule LiveSecretWeb.Gettext do
 
   See the [Gettext Docs](https://hexdocs.pm/gettext) for detailed usage.
   """
-  use Gettext, otp_app: :live_secret
+  use Gettext, otp_app: :livesecret
 end

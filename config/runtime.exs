@@ -12,12 +12,12 @@ import Config
 # If you use `mix release`, you need to explicitly enable the server
 # by passing the PHX_SERVER=true when you start it:
 #
-#     PHX_SERVER=true bin/live_secret start
+#     PHX_SERVER=true bin/livesecret start
 #
 # Alternatively, you can use `mix phx.gen.release` to generate a `bin/server`
 # script that automatically sets the env var above.
 if System.get_env("PHX_SERVER") do
-  config :live_secret, LiveSecretWeb.Endpoint, server: true
+  config :livesecret, LiveSecretWeb.Endpoint, server: true
 end
 
 if config_env() == :prod do
@@ -25,10 +25,10 @@ if config_env() == :prod do
     System.get_env("DATABASE_PATH") ||
       raise """
       environment variable DATABASE_PATH is missing.
-      For example: /etc/live_secret/live_secret.db
+      For example: /etc/livesecret/livesecret.db
       """
 
-  config :live_secret, LiveSecret.Repo,
+  config :livesecret, LiveSecret.Repo,
     database: database_path,
     pool_size: String.to_integer(System.get_env("POOL_SIZE") || "5")
 
@@ -47,7 +47,7 @@ if config_env() == :prod do
   host = System.get_env("PHX_HOST") || "example.com"
   port = String.to_integer(System.get_env("PORT") || "4000")
 
-  config :live_secret, LiveSecretWeb.Endpoint,
+  config :livesecret, LiveSecretWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],
     http: [
       # Enable IPv6 and bind on all interfaces.
@@ -59,5 +59,5 @@ if config_env() == :prod do
     ],
     secret_key_base: secret_key_base
 
-  config :live_secret, LiveSecret.Expiration, interval: :timer.seconds(20)
+  config :livesecret, LiveSecret.Expiration, interval: :timer.seconds(20)
 end

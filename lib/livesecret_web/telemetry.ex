@@ -31,23 +31,23 @@ defmodule LiveSecretWeb.Telemetry do
       ),
 
       # Database Metrics
-      summary("live_secret.repo.query.total_time",
+      summary("livesecret.repo.query.total_time",
         unit: {:native, :millisecond},
         description: "The sum of the other measurements"
       ),
-      summary("live_secret.repo.query.decode_time",
+      summary("livesecret.repo.query.decode_time",
         unit: {:native, :millisecond},
         description: "The time spent decoding the data received from the database"
       ),
-      summary("live_secret.repo.query.query_time",
+      summary("livesecret.repo.query.query_time",
         unit: {:native, :millisecond},
         description: "The time spent executing the query"
       ),
-      summary("live_secret.repo.query.queue_time",
+      summary("livesecret.repo.query.queue_time",
         unit: {:native, :millisecond},
         description: "The time spent waiting for a database connection"
       ),
-      summary("live_secret.repo.query.idle_time",
+      summary("livesecret.repo.query.idle_time",
         unit: {:native, :millisecond},
         description:
           "The time the connection spent waiting before being checked out for the query"

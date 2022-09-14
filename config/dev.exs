@@ -1,8 +1,8 @@
 import Config
 
 # Configure your database
-config :live_secret, LiveSecret.Repo,
-  database: Path.expand("../live_secret_dev.db", Path.dirname(__ENV__.file)),
+config :livesecret, LiveSecret.Repo,
+  database: Path.expand("../livesecret_dev.db", Path.dirname(__ENV__.file)),
   pool_size: 5,
   stacktrace: true,
   show_sensitive_data_on_connection_error: true
@@ -13,7 +13,7 @@ config :live_secret, LiveSecret.Repo,
 # The watchers configuration can be used to run external
 # watchers to your application. For example, we use it
 # with esbuild to bundle .js and .css sources.
-config :live_secret, LiveSecretWeb.Endpoint,
+config :livesecret, LiveSecretWeb.Endpoint,
   # Binding to loopback ipv4 address prevents access from other machines.
   # Change to `ip: {0, 0, 0, 0}` to allow access from other machines.
   http: [ip: {127, 0, 0, 1}, port: 4000],
@@ -52,17 +52,17 @@ config :live_secret, LiveSecretWeb.Endpoint,
 # different ports.
 
 # Watch static and templates for browser reloading.
-config :live_secret, LiveSecretWeb.Endpoint,
+config :livesecret, LiveSecretWeb.Endpoint,
   live_reload: [
     patterns: [
       ~r"priv/static/.*(js|css|png|jpeg|jpg|gif|svg)$",
       ~r"priv/gettext/.*(po)$",
-      ~r"lib/live_secret_web/(live|views)/.*(ex)$",
-      ~r"lib/live_secret_web/templates/.*(eex)$"
+      ~r"lib/livesecret_web/(live|views)/.*(ex)$",
+      ~r"lib/livesecret_web/templates/.*(eex)$"
     ]
   ]
 
-config :live_secret, LiveSecret.Expiration, interval: :timer.seconds(20)
+config :livesecret, LiveSecret.Expiration, interval: :timer.seconds(20)
 
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"

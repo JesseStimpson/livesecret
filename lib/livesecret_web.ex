@@ -30,7 +30,7 @@ defmodule LiveSecretWeb do
   def view do
     quote do
       use Phoenix.View,
-        root: "lib/live_secret_web/templates",
+        root: "lib/livesecret_web/templates",
         namespace: LiveSecretWeb
 
       # Import convenience functions from controllers
