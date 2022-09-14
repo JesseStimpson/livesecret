@@ -58,4 +58,6 @@ if config_env() == :prod do
       port: port
     ],
     secret_key_base: secret_key_base
+
+  config :live_secret, LiveSecret.Expiration, interval: :timer.seconds(20)
 end

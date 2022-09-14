@@ -339,7 +339,7 @@ defmodule LiveSecretWeb.PageLive do
       ) do
     # presence meta must be updated from the "owner" process so we have to broadcast first
     # so that we can select the right user
-    :ok = Phoenix.PubSub.broadcast(LiveSecret.PubSub, topic(id), {"unlocked", user_id})
+    :ok = Phoenix.PubSub.broadcast(LiveSecret.PubSub, Secret.topic(id), {"unlocked", user_id})
     {:noreply, socket}
   end
 
@@ -347,7 +347,9 @@ defmodule LiveSecretWeb.PageLive do
   def handle_event(
         "burn",
         params,
-        socket = %{assigns: %{id: id, current_user: current_user, live_action: live_action, users: users}}
+        socket = %{
+          assigns: %{id: id, current_user: current_user, live_action: live_action, users: users}
+        }
       ) do
     secret = LiveSecret.Repo.get!(Secret, id)
 
@@ -375,7 +377,7 @@ defmodule LiveSecretWeb.PageLive do
     :ok =
       Phoenix.PubSub.broadcast(
         LiveSecret.PubSub,
-        topic(id),
+        Secret.topic(id),
         {"burned", current_user.id, burned_at}
       )
 
@@ -383,9 +385,12 @@ defmodule LiveSecretWeb.PageLive do
       :receiver ->
         # change state to revealed
         active_user = users[current_user.id]
-        LiveSecretWeb.Presence.update(self(), topic(id), current_user.id, %ActiveUser{
-          active_user | state: :revealed
-          })
+
+        LiveSecretWeb.Presence.update(self(), Secret.topic(id), current_user.id, %ActiveUser{
+          active_user
+          | state: :revealed
+        })
+
       _ ->
         :ok
     end
@@ -447,7 +452,7 @@ defmodule LiveSecretWeb.PageLive do
         case users[user_id] do
           active_user = %ActiveUser{left_at: nil} ->
             {:ok, _} =
-              LiveSecretWeb.Presence.update(self(), topic(id), user_id, %ActiveUser{
+              LiveSecretWeb.Presence.update(self(), Secret.topic(id), user_id, %ActiveUser{
                 active_user
                 | state: :unlocked
               })
@@ -480,6 +485,17 @@ defmodule LiveSecretWeb.PageLive do
          |> assign(burned_at: burned_at)
          |> put_burn_flash()}
     end
+  end
+
+  # All subscribers are informed the secret has been expired
+  def handle_info(
+        "expired",
+        socket
+      ) do
+    {:noreply,
+     socket
+     |> put_flash(:info, "The secret has expired. You've been redirected to the home page.")
+     |> push_redirect(to: Routes.page_path(socket, :create))}
   end
 
   # Catch-all for dev
@@ -520,10 +536,6 @@ defmodule LiveSecretWeb.PageLive do
     socket
   end
 
-  defp topic(id) do
-    "secret/#{id}"
-  end
-
   def detect_presence(socket = %{assigns: %{presence: _}}) do
     socket
   end
@@ -532,7 +544,7 @@ defmodule LiveSecretWeb.PageLive do
         socket = %{assigns: %{current_user: user, id: id, live_action: live_action, live?: live?}}
       )
       when not is_nil(user) do
-    topic = topic(id)
+    topic = Secret.topic(id)
 
     active_user = %ActiveUser{
       id: user[:id],
@@ -569,7 +581,7 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def detect_presence(socket = %{assigns: %{id: id}}) do
-    topic = topic(id)
+    topic = Secret.topic(id)
 
     socket
     |> assign(users: %{})

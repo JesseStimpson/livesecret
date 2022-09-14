@@ -23,7 +23,7 @@ defmodule LiveSecret.Presecret do
 
   # TODO - this can be done purely with changesets, I'm sure of it
   def make_secret_attrs(
-        attrs = %{
+        _attrs = %{
           "burn_key" => burn_key,
           "content" => content,
           "iv" => iv,

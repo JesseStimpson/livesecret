@@ -62,6 +62,8 @@ config :live_secret, LiveSecretWeb.Endpoint,
     ]
   ]
 
+config :live_secret, LiveSecret.Expiration, interval: :timer.seconds(20)
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

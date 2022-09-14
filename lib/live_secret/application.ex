@@ -22,6 +22,8 @@ defmodule LiveSecret.Application do
       # {LiveSecret.Worker, arg}
     ]
 
+    LiveSecret.Expiration.setup_job()
+
     # See https://hexdocs.pm/elixir/Supervisor.html
     # for other strategies and supported options
     opts = [strategy: :one_for_one, name: LiveSecret.Supervisor]

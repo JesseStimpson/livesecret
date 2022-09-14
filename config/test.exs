@@ -17,6 +17,8 @@ config :live_secret, LiveSecretWeb.Endpoint,
   secret_key_base: "RDekpi/uUZ0ZuKQ84ARGndoiHw9OBfrLb+yz6JycX2kN3yeZWc9NkI7f055Pepuo",
   server: false
 
+config :live_secret, LiveSecret.Expiration, interval: :timer.seconds(20)
+
 # Print only warnings and errors during test
 config :logger, level: :warn
 

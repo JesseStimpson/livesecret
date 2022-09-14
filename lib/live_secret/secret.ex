@@ -23,6 +23,10 @@ defmodule LiveSecret.Secret do
     %Secret{id: DbId.generate()}
   end
 
+  def topic(id) do
+    "secret/#{id}"
+  end
+
   @doc false
   def changeset(secret, attrs) do
     secret
