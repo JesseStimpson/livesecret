@@ -5,6 +5,8 @@ defmodule LiveSecretWeb.PageLive do
   alias LiveSecretWeb.{SecretFormComponent, ActiveUser}
   alias LiveSecret.{Presecret, Secret}
 
+  require Logger
+
   @impl true
   def render(assigns) do
     ~H"""
@@ -262,24 +264,38 @@ defmodule LiveSecretWeb.PageLive do
 
   @impl true
   def mount(%{"id" => id, "key" => key}, %{}, socket = %{assigns: %{live_action: :admin}}) do
-    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
+    case read_secret_or_redirect(socket, id) do
+      %Secret{burned_at: burned_at, live?: live?} ->
+        {:ok,
+         socket
+         |> assert_creator_key(id, key)
+         |> assign_current_user()
+         |> assign(
+           id: id,
+           creator_key: key,
+           burned_at: burned_at,
+           special_action: nil,
+           live?: live?
+         )
+         |> detect_presence()}
 
-    {:ok,
-     socket
-     |> assert_creator_key(id, key)
-     |> assign_current_user()
-     |> assign(id: id, creator_key: key, burned_at: burned_at, special_action: nil, live?: live?)
-     |> detect_presence()}
+      socket ->
+        {:ok, socket}
+    end
   end
 
   def mount(%{"id" => id}, %{}, socket = %{assigns: %{live_action: :receiver}}) do
-    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
+    case read_secret_or_redirect(socket, id) do
+      %Secret{burned_at: burned_at, live?: live?} ->
+        {:ok,
+         socket
+         |> assign_current_user()
+         |> assign(id: id, burned_at: burned_at, special_action: nil, live?: live?)
+         |> detect_presence()}
 
-    {:ok,
-     socket
-     |> assign_current_user()
-     |> assign(id: id, burned_at: burned_at, special_action: nil, live?: live?)
-     |> detect_presence()}
+      socket ->
+        {:ok, socket}
+    end
   end
 
   def mount(_params, %{}, socket = %{assigns: %{live_action: :create}}) do
@@ -416,13 +432,17 @@ defmodule LiveSecretWeb.PageLive do
         _url,
         socket = %{assigns: %{live_action: :admin}}
       ) do
-    %Secret{burned_at: burned_at, live?: live?} = LiveSecret.Repo.get!(Secret, id)
+    case read_secret_or_redirect(socket, id) do
+      %Secret{burned_at: burned_at, live?: live?} ->
+        {:noreply,
+         socket
+         |> assert_creator_key(id, key)
+         |> assign(id: id, creator_key: key, burned_at: burned_at, live?: live?)
+         |> detect_presence()}
 
-    {:noreply,
-     socket
-     |> assert_creator_key(id, key)
-     |> assign(id: id, creator_key: key, burned_at: burned_at, live?: live?)
-     |> detect_presence()}
+      socket ->
+        {:noreply, socket}
+    end
   end
 
   # Catch-all for dev
@@ -623,6 +643,23 @@ defmodule LiveSecretWeb.PageLive do
     else
       socket
       |> assign(current_user: nil)
+    end
+  end
+
+  def read_secret_or_redirect(socket, id) do
+    case LiveSecret.Repo.get(Secret, id) do
+      secret = %Secret{} ->
+        secret
+
+      error ->
+        Logger.info("#{id} not found: #{inspect(error)}")
+
+        socket
+        |> put_flash(
+          :error,
+          "That secret doesn't exist. You've been redirected to the home page."
+        )
+        |> push_redirect(to: Routes.page_path(socket, :create))
     end
   end
 

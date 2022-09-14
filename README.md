@@ -69,7 +69,7 @@ burned secret is essentially a tombstone.
 When you author a secret, you choose the expiration period for all the information stored on the
 server (ciphertext, iv, and metadata). After the expiration period, all this information will be
 deleted from the server database. If a user visits the URL for this secret after the expiration,
-they will receive a 404 Not Found error page. The default link expiration is 1 hour.
+they will be informed that the secret does not exist.
 
 ### Admin view
 The author of the secret can perform a limited set of actions on the secret after creation. This
@@ -97,9 +97,8 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Source: https://github.com/phoenixframework/phoenix
 
 ## Next
-1. Implement 404 page
-2. Update UX/UI in the Recipient view (including Decryption Modal)
-3. Ability to disable Live mode from Admin view
-4. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
-5. Diceware-like passphrase generatation from JS
-6. Change "Joined at" to "Joined since" and update incrementing counter
+1. Update UX/UI in the Recipient view (including Decryption Modal)
+2. Ability to disable Live mode from Admin view
+3. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
+4. Diceware-like passphrase generatation from JS
+5. Change "Joined at" to "Joined since" and update incrementing counter
