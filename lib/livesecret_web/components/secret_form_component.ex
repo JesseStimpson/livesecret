@@ -9,7 +9,7 @@ defmodule LiveSecretWeb.SecretFormComponent do
       <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
         <%= label f, :content, class: "block text-xs font-medium text-gray-700 pt-2 px-2"%>
         <div phx-update="ignore" id="cleartext-div-for-ignore">
-          <textarea id="cleartext" class="h-24 pt-3 block w-full resize-none border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono" placeholder="Put your secret information here..." />
+          <textarea id="cleartext" class="h-24 sm:h-64 pt-3 block w-full resize-y border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono" placeholder="Put your secret information here..." />
         </div>
         <%= hidden_input f, :content, id: "ciphertext" %>
         <%= hidden_input f, :iv, id: "iv" %>

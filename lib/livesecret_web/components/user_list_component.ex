@@ -10,7 +10,7 @@ defmodule LiveSecretWeb.UserListComponent do
     <ul role="list" class="divide-y divide-gray-200">
       <%= for {user_id, active_user} <- sort_users(@users, @self) do %>
       <li>
-          <div class="flex items-center px-4 py-4 sm:px-6">
+          <div class="block sm:flex items-center px-4 py-4 sm:px-6">
             <div class="flex min-w-0 flex-1 items-center">
               <div class="flex-shrink-0">
                 <span class="relative inline-block">
@@ -153,7 +153,7 @@ defmodule LiveSecretWeb.UserListComponent do
   """
   def badge(assigns) do
     ~H"""
-    <div>
+    <div class="inline-flex sm:block justify-center items-center pt-4 sm:p-0 w-full sm:w-fit">
     <% class = "inline-flex items-center rounded-full border border-gray-300 bg-white px-2.5 py-0.5 text-sm font-medium leading-5 text-gray-700 shadow-sm hover:bg-gray-50" %>
     <%= case {@active_user.live_action, @active_user.state, ActiveUser.connected?(@active_user)} do %>
     <% {:receiver, :locked, true} -> %>

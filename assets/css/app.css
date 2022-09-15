@@ -2,8 +2,6 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
-/* This file is for your main application CSS */
-
 /* Alerts and form errors used by phx.new */
 .alert {
   padding: 15px;
@@ -166,8 +164,4 @@
   100% {
     opacity: 0;
   }
-}
-
-.live-secret-passphrase {
-  -webkit-text-security: square;
 }

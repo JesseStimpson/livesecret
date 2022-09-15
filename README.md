@@ -100,5 +100,5 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 1. Update UX/UI in the Recipient view (including Decryption Modal)
 2. Ability to disable Live mode from Admin view
 3. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
-4. Diceware-like passphrase generatation from JS
+4. Diceware-like passphrase generation from JS
 5. Change "Joined at" to "Joined since" and update incrementing counter

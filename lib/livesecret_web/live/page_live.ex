@@ -35,7 +35,9 @@ defmodule LiveSecretWeb.PageLive do
           <%= case @special_action do %>
           <% :decrypting -> %>
             <% secret = read_secret_for_decrypt(@id) %>
+            <%= unless is_nil(secret.content) do %>
             <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
+            <% end %>
           <% _ -> %>
           <% end %>
 
@@ -70,6 +72,7 @@ defmodule LiveSecretWeb.PageLive do
           </div>
 
           <% :receiver -> %>
+            <.receiver_intro />
             <.section_header>Online now</.section_header>
             <div class="py-4">
 
@@ -83,6 +86,17 @@ defmodule LiveSecretWeb.PageLive do
         </div>
       </div>
     </main>
+    </div>
+    """
+  end
+
+  defp receiver_intro(assigns) do
+    ~H"""
+    <div class="pt-8 px-8 pb-2 w-full flex justify-center items-center align-center">
+    Some help text
+    If burned, say so
+    If locked, wait
+    If unlocked, refresh
     </div>
     """
   end
@@ -169,7 +183,7 @@ defmodule LiveSecretWeb.PageLive do
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"></div>
 
     <div class="fixed inset-0 z-10 overflow-y-auto">
-      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+      <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center">
         <!--
           Modal panel, show/hide based on modal state.
 
@@ -180,7 +194,7 @@ defmodule LiveSecretWeb.PageLive do
             From: "opacity-100 translate-y-0 sm:scale-100"
             To: "opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
         -->
-        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
+        <div class="relative transform overflow-hidden rounded-lg bg-white px-4 pt-5 pb-4 text-left shadow-xl transition-all sm:my-8 sm:w-full md:w-2/3 sm:p-6">
           <div>
             <div class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-red-100">
               <!-- Heroicon name: outline/lock-open -->
@@ -194,19 +208,32 @@ defmodule LiveSecretWeb.PageLive do
                 <p class="text-sm text-gray-500">Paste the passphrase into this box and click 'Decrypt'. The secret content will be shown if the passphrase is correct.</p>
               </div>
               <div class="pt-2" phx-update="ignore" id="passphrase-div-for-ignore">
-                <input type="text" name="passphrase" id="passphrase" class="block w-full rounded-full border-gray-300 px-4 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Passphrase">
+                <input type="text" name="passphrase" id="passphrase" class="block w-full rounded-full border-gray-300 px-4 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm" placeholder="Passphrase" autocomplete="off">
               </div>
             </div>
           </div>
 
           <div id="ciphertext-div-for-ignore" phx-update="ignore">
-            <input type="hidden" id="ciphertext" value={:base64.encode(@secret.content)} >
+            <input type="hidden" id="ciphertext" value={if is_nil(@secret.content), do: nil, else: :base64.encode(@secret.content)} >
           </div>
           <div id="iv-div-for-ignore" phx-update="ignore">
-            <input type="hidden" id="iv" value={:base64.encode(@secret.iv)} >
+            <input type="hidden" id="iv" value={if is_nil(@secret.iv), do: nil, else: :base64.encode(@secret.iv)} >
           </div>
           <div id="cleartext-div-for-ignore" phx-update="ignore">
-            <textarea id="cleartext" hidden readonly class="h-24 pt-3 block w-full resize-none border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono"/>
+            <div id="cleartext-container" class="hidden text-center">
+              <textarea id="cleartext" readonly class="block w-full resize-none rounded-md border-yellow-400 bg-gray-100 placeholder-gray-500 ring-0 font-mono"/>
+              <div class="p-4 w-full flex justify-center items-center align-center">
+                <button type="button" class={"text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500 inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "}
+                phx-click={JS.dispatch("live-secret:clipcopy", to: "#cleartext")}
+                >
+                Copy to clipboard
+                <.action_icon has_text={true} id={:clipboard} />
+                </button>
+              </div>
+              <div class="">
+                <p class="text-sm text-gray-500">Success! When you leave this window, the content is gone forver.</p>
+              </div>
+            </div>
           </div>
 
           <%# phx-change="burn" will send the "burn" event as soon as the field is updated by app.js. There is no form submission %>
@@ -390,7 +417,7 @@ defmodule LiveSecretWeb.PageLive do
 
     {:ok,
      socket
-     |> assign(page_title: "LiveSecret · Creating")
+     |> assign(page_title: "LiveSecret · Secrets secured")
      |> assign_current_user()
      |> assign(id: nil, burned_at: nil, special_action: nil, live?: true)
      |> assign(changeset: changeset)}

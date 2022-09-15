@@ -80,6 +80,7 @@ async function DecryptSecret() {
   var ivEl = document.getElementById("iv");
   var passphraseEl = document.getElementById("passphrase");
   var cleartextEl = document.getElementById("cleartext");
+  var cleartextDivEl = document.getElementById("cleartext-container");
 
   var userkey = passphraseEl.value;
   var ivVal = ivEl.value;
@@ -100,8 +101,10 @@ async function DecryptSecret() {
     new Event("input", { bubbles: true })
   );
 
+  cleartextDivEl.classList.remove("hidden");
   cleartextEl.value = cleartext;
-  cleartextEl.hidden = false;
+  cleartextEl.style.height = "";
+  cleartextEl.style.height = cleartextEl.scrollHeight + "px"
 
   var closeBtnEl = document.getElementById("close-btn");
   var decryptBtnEl = document.getElementById("decrypt-btn");
@@ -110,8 +113,8 @@ async function DecryptSecret() {
 }
 
 let Events = {
-    CreateSecret: CreateSecret,
-    DecryptSecret: DecryptSecret
+  CreateSecret: CreateSecret,
+  DecryptSecret: DecryptSecret
 }
 
 export default Events;
