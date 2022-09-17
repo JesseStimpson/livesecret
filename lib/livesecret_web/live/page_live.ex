@@ -252,6 +252,16 @@ defmodule LiveSecretWeb.PageLive do
           <div id="iv-div-for-ignore" phx-update="ignore">
             <input type="hidden" id="iv" value={if is_nil(@secret.iv), do: nil, else: :base64.encode(@secret.iv)} >
           </div>
+          <div id="decryptionfailure-div-for-ignore" phx-update="ignore">
+            <div id="decryptionfailure-container" class="hidden text-center pt-1">
+              <div class="inline-flex">
+                <div class="block pr-2">
+                  <p class="text-md text-gray-700">Incorrect passphrase - try again</p>
+                </div>
+                <span class="hidden inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800" id="fail-counter">0</span>
+              </div>
+            </div>
+          </div>
           <div id="cleartext-div-for-ignore" phx-update="ignore">
             <div id="cleartext-container" class="hidden text-center">
               <textarea id="cleartext" readonly class="block w-full resize-none rounded-md border-yellow-400 bg-gray-100 placeholder-gray-500 ring-0 font-mono"/>

@@ -81,17 +81,30 @@ async function DecryptSecret() {
   var passphraseEl = document.getElementById("passphrase");
   var cleartextEl = document.getElementById("cleartext");
   var cleartextDivEl = document.getElementById("cleartext-container");
+  var decryptionfailureDivEl = document.getElementById("decryptionfailure-container");
+  var failCounterEl = document.getElementById("fail-counter");
 
   var userkey = passphraseEl.value;
   var ivVal = ivEl.value;
   var ciphertextVal = ciphertextEl.value;
+
+  try {
+    decryptedData = await Encryption.DecryptSecret(userkey, ivVal, ciphertextVal);
+  } catch (e) {
+    var count = parseInt(failCounterEl.textContent) + 1;
+    failCounterEl.textContent = count;
+    if (count > 1) {
+      failCounterEl.classList.remove("hidden");
+    }
+    decryptionfailureDivEl.classList.remove("hidden");
+    return;
+  }
 
   passphraseEl.type = "hidden";
   passphraseEl.value = "";
   ciphertextEl.value = "";
   ivEl.value = "";
 
-  decryptedData = await Encryption.DecryptSecret(userkey, ivVal, ciphertextVal);
   var burnkey = decryptedData.burnkey;
   var cleartext = decryptedData.cleartext;
 
@@ -102,6 +115,7 @@ async function DecryptSecret() {
   );
 
   cleartextDivEl.classList.remove("hidden");
+  decryptionfailureDivEl.classList.add("hidden");
   cleartextEl.value = cleartext;
   cleartextEl.style.height = "";
   cleartextEl.style.height = cleartextEl.scrollHeight + "px"
