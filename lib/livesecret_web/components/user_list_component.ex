@@ -81,10 +81,10 @@ defmodule LiveSecretWeb.UserListComponent do
     <p class="truncate text-sm font-medium text-indigo-600">
     <%= case {@active_user.live_action, ActiveUser.connected?(@active_user)} do %>
     <% {_, true} -> %>
-    <%= ComponentUtil.render_live_action(@active_user.live_action) %>
+    <%= ComponentUtil.render_live_action(@active_user.live_action, nil) %>
     <% {_, false} -> %>
     Former
-    <%= ComponentUtil.render_live_action(@active_user.live_action) %>
+    <%= ComponentUtil.render_live_action(@active_user.live_action, nil) %>
     <% end %>
     <%= if @self == @active_user.id do %>
       (me)

@@ -97,7 +97,6 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
   * Source: https://github.com/phoenixframework/phoenix
 
 ## Next
-1. Ability to disable Live mode from Admin view
-2. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
-3. Diceware-like passphrase generation from JS
-4. Change "Joined at" to "Joined since" and update incrementing counter
+1. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
+2. Diceware-like passphrase generation from JS
+3. Change "Joined at" to "Joined since" and update incrementing counter

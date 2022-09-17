@@ -29,6 +29,7 @@ defmodule LiveSecretWeb.PageLive do
             id={@id}
             live_action={@live_action}
             burned_at={@burned_at}
+            live?={@live?}
             />
           <% end %>
 
@@ -68,7 +69,7 @@ defmodule LiveSecretWeb.PageLive do
 
           <.section_header>Actions</.section_header>
           <div class="py-4">
-          <.action_panel burned_at={@burned_at} />
+          <.action_panel burned_at={@burned_at} live?={@live?} />
           </div>
 
           <% :receiver -> %>
@@ -314,6 +315,28 @@ defmodule LiveSecretWeb.PageLive do
       action_click="burn"
       >
       </.action_item>
+
+      <%= if @live? do %>
+      <.action_item
+      title="Async Mode"
+      description="Async mode will auto-unlock anyone who visits the secret link. The secret content is still burned after the first decryption event. However, multiple clients could connect at the same time."
+      action_enabled={is_nil(@burned_at)}
+      action_text="Go Async"
+      action_icon={:unlocked}
+      action_class="text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
+      action_click="go_async"
+      />
+      <% else %>
+      <.action_item
+      title="Live Mode"
+      description="In Live mode, the Admin must remain on this page to unlock the intended recipient when they connect."
+      action_enabled={is_nil(@burned_at)}
+      action_text="Go Live"
+      action_icon={:locked}
+      action_class="text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500"
+      action_click="go_live"
+      />
+      <% end %>
     </ul>
     """
   end
@@ -340,9 +363,6 @@ defmodule LiveSecretWeb.PageLive do
         <% end %>
         </button>
       </div>
-      <div>
-          <%= render_slot(@inner_block) %>
-      </div>
     </li>
     """
   end
@@ -363,6 +383,16 @@ defmodule LiveSecretWeb.PageLive do
     <% :markdown -> %>
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 208 128" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
       <path fill-rule="evenodd" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0l-30-33h20V30h20v35h20z"/>
+    </svg>
+
+    <% :locked -> %>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
+      <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
+    </svg>
+
+    <% :unlocked -> %>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class={margin_for_left_text<>" -mr-1 w-5 h-5"}>
+      <path fill-rule="evenodd" d="M14.5 1A4.5 4.5 0 0010 5.5V9H3a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1.5V5.5a3 3 0 116 0v2.75a.75.75 0 001.5 0V5.5A4.5 4.5 0 0014.5 1z" clip-rule="evenodd" />
     </svg>
 
     <% end %>
@@ -519,6 +549,38 @@ defmodule LiveSecretWeb.PageLive do
     {:noreply, socket}
   end
 
+  def handle_event(
+        "go_async",
+        _params,
+        socket = %{assigns: %{live_action: :admin, id: id, users: users}}
+      ) do
+    LiveSecret.Repo.get!(Secret, id)
+    |> Secret.changeset(%{
+      live?: false
+    })
+    |> LiveSecret.Repo.update!()
+
+    for {user_id, %ActiveUser{live_action: :receiver, state: :locked}} <- users do
+      :ok = Phoenix.PubSub.broadcast(LiveSecret.PubSub, Secret.topic(id), {"unlocked", user_id})
+    end
+
+    {:noreply,
+     socket
+     |> assign(live?: false)}
+  end
+
+  def handle_event("go_live", _params, socket = %{assigns: %{live_action: :admin, id: id}}) do
+    LiveSecret.Repo.get!(Secret, id)
+    |> Secret.changeset(%{
+      live?: true
+    })
+    |> LiveSecret.Repo.update!()
+
+    {:noreply,
+     socket
+     |> assign(live?: true)}
+  end
+
   # Burn the secret so that no one else can access it
   def handle_event(
         "burn",
@@ -630,7 +692,7 @@ defmodule LiveSecretWeb.PageLive do
     case current_user.id do
       ^user_id ->
         case users[user_id] do
-          active_user = %ActiveUser{left_at: nil} ->
+          active_user = %ActiveUser{live_action: :receiver, state: :locked, left_at: nil} ->
             {:ok, _} =
               LiveSecretWeb.Presence.update(self(), Secret.topic(id), user_id, %ActiveUser{
                 active_user
