@@ -7,7 +7,7 @@ async function CreateSecret(event) {
   var enabledElements = []
 
   // Disable everything while we encrypt
-  console.log("Disabling form...");
+  //console.log("Disabling form...");
   var elements = form.elements;
   for (var i = 0, len = elements.length; i < len; ++i) {
     var el = elements[i];
@@ -26,11 +26,19 @@ async function CreateSecret(event) {
   var passphrase = document.getElementById("passphrase");
   var userkey = null;
   if (passphrase.value == "") {
-    console.log("Generating passphrase...");
-    userkey = await Encryption.GeneratePassphrase();
+    //console.log("Generating passphrase...");
+    const {
+      host, hostname, href, origin, pathname, port, protocol, search
+    } = window.location
+
+    var url = origin + '/eff_large_wordlist.json';
+    var data = await fetch(url);
+    var wordlist = await data.json();
+
+    userkey = await Encryption.GeneratePassphrase(wordlist);
 
   } else {
-    console.log("Found user provided passphrase");
+    //console.log("Found user provided passphrase");
     userkey = passphrase.value;
   }
 
@@ -54,7 +62,7 @@ async function CreateSecret(event) {
   var ciphertextEl = document.getElementById("ciphertext");
   ciphertextEl.value = ciphertextVal;
 
-  console.log("Submitting form...");
+  //console.log("Submitting form...");
 
   // Enable everything that we disabled so that the phoenix submit works
   // Otherwise, there is no data in the submission.

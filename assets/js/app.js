@@ -71,7 +71,7 @@ window.addEventListener("live-secret:clipcopy", (event) => {
 });
 
 window.addEventListener("live-secret:clipcopy-instructions", (event) => {
-  console.log("Generating instructions...");
+  //console.log("Generating instructions...");
   var userkeyStashEl = document.getElementById("userkey-stash");
 
   var flashUserkey = true;

@@ -98,5 +98,4 @@ Ready to run in production? Please [check our deployment guides](https://hexdocs
 
 ## Next
 1. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
-2. Diceware-like passphrase generation from JS
-3. Change "Joined at" to "Joined since" and update incrementing counter
+2. Change "Joined at" to "Joined since" and update incrementing counter

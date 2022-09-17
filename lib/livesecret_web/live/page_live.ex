@@ -23,6 +23,7 @@ defmodule LiveSecretWeb.PageLive do
       <div class="mx-auto max-w-7xl px-4 pb-12 sm:px-6 lg:px-8">
         <div class="rounded-lg bg-white px-5 py-6 shadow sm:px-6">
 
+          <%# BREADCRUMB %>
           <%= unless is_nil(@id) do %>
           <LiveSecretWeb.BreadcrumbComponent.show
             home={Routes.page_path(@socket, :create)}
@@ -34,6 +35,8 @@ defmodule LiveSecretWeb.PageLive do
           <% end %>
 
           <%= case @special_action do %>
+
+          <%# DECRYPT MODAL (special_action == :decrypting) %>
           <% :decrypting -> %>
             <% secret = read_secret_for_decrypt(@id) %>
             <%= unless is_nil(secret.content) do %>
@@ -43,35 +46,35 @@ defmodule LiveSecretWeb.PageLive do
           <% end %>
 
           <%= case @live_action do %>
+
+          <%# CREATE VIEW (live_action == :create) %>
           <% :create -> %>
 
+            <%# secret_links component is rendered, but hidden, so we can store the passphrase on the client %>
             <.secret_links live_action={@live_action} to={Routes.page_path(@socket, :receiver, "dne")} enabled={is_nil(@burned_at)}/>
-
             <SecretFormComponent.create changeset={@changeset} modes={Presecret.supported_modes()}, durations={Presecret.supported_durations()}/>
             <.section_header>Help</.section_header>
             <.help live_action={@live_action}/>
+
+          <%# ADMIN VIEW (live_action == :admin) %>
           <% :admin -> %>
 
             <.secret_links live_action={@live_action} to={Routes.page_path(@socket, :receiver, @id)} enabled={is_nil(@burned_at)}/>
 
             <.section_header >Online now</.section_header>
-            <div class="py-4">
+            <%= unless is_nil(@current_user) do %>
+              <LiveSecretWeb.UserListComponent.view
+                self={@current_user.id}
+                live_action={@live_action}
+                users={@users}
+                burned_at={@burned_at}
+                />
+            <% end %>
 
-              <%= unless is_nil(@current_user) do %>
-                <LiveSecretWeb.UserListComponent.view
-                  self={@current_user.id}
-                  live_action={@live_action}
-                  users={@users}
-                  burned_at={@burned_at}
-                  />
-              <% end %>
-            </div>
+            <.section_header>Actions</.section_header>
+            <.action_panel burned_at={@burned_at} live?={@live?} />
 
-          <.section_header>Actions</.section_header>
-          <div class="py-4">
-          <.action_panel burned_at={@burned_at} live?={@live?} />
-          </div>
-
+          <%# RECEIVER VIEW (live_action == :receiver) %>
           <% :receiver -> %>
             <% user = if is_nil(@current_user), do: nil, else: @users[@current_user.id] %>
 
@@ -80,14 +83,13 @@ defmodule LiveSecretWeb.PageLive do
             <% end %>
 
             <.section_header>Online now</.section_header>
-            <div class="py-4">
+            <%= unless is_nil(@current_user) do %>
+              <LiveSecretWeb.UserListComponent.view self={@current_user.id} live_action={@live_action} users={@users} burned_at={@burned_at} />
+            <% end %>
 
-              <%= unless is_nil(@current_user) do %>
-                <LiveSecretWeb.UserListComponent.view self={@current_user.id} live_action={@live_action} users={@users} burned_at={@burned_at} />
-              <% end %>
-            </div>
             <.section_header>Help</.section_header>
             <.help live_action={@live_action}/>
+
           <% end %>
         </div>
       </div>
@@ -303,6 +305,7 @@ defmodule LiveSecretWeb.PageLive do
 
   defp action_panel(assigns) do
     ~H"""
+    <div class="py-4">
     <ul role="list" class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-2 2xl:grid-cols-2">
 
       <.action_item
@@ -338,6 +341,7 @@ defmodule LiveSecretWeb.PageLive do
       />
       <% end %>
     </ul>
+    </div>
     """
   end
 
