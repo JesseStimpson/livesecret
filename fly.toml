@@ -13,6 +13,7 @@ processes = []
   DATABASE_PATH="/data/livesecret_data/livesecret_prod.db"
   PHX_HOST = "livesecret.fly.dev"
   PORT = "8080"
+  FOOTER = "true"
 
 [experimental]
   allowed_public_ports = []

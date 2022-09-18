@@ -14,7 +14,7 @@ defmodule LiveSecretWeb.Router do
     plug :accepts, ["json"]
   end
 
-  scope "/", LiveSecretWeb do
+  scope "/", LiveSecretWeb, assigns: %{footer?: "true" === System.get_env("FOOTER")} do
     pipe_through :browser
 
     live "/", PageLive, :create
