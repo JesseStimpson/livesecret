@@ -1,5 +1,10 @@
 defmodule LiveSecret.Do do
   alias LiveSecret.{Repo, Secret, Presecret}
+  import Ecto.Query, only: [from: 2]
+
+  def count_secrets() do
+    Repo.aggregate(from(_s in Secret, []), :count, :id)
+  end
 
   @doc """
   Reads secret with id or throws
@@ -44,44 +49,37 @@ defmodule LiveSecret.Do do
 
   Burned secrets have no iv and no ciphertext
   """
-  def burn!(secret, event_extra \\ []) do
+  def burn!(secret) do
     burned_at = NaiveDateTime.utc_now()
 
-    secret =
-      secret
-      |> Secret.changeset(%{
-        iv: nil,
-        burned_at: burned_at,
-        content: nil
-      })
-      |> Repo.update!()
-
-    LiveSecret.PubSubDo.notify_burned!(secret.id, burned_at, event_extra)
-
     secret
+    |> Secret.changeset(%{
+      iv: nil,
+      burned_at: burned_at,
+      content: nil
+    })
+    |> Repo.update!()
   end
 
   @doc """
   Updates a secret to be in live mode
   """
   def go_live!(id) do
-    secret =
-      Repo.get!(Secret, id)
-      |> Secret.changeset(%{
-        live?: true
-      })
-      |> Repo.update!()
+    Repo.get!(Secret, id)
+    |> Secret.changeset(%{
+      live?: true
+    })
+    |> Repo.update!()
   end
 
   @doc """
   Updates a secret to be in async mode
   """
   def go_async!(id) do
-    secret =
-      Repo.get!(Secret, id)
-      |> Secret.changeset(%{
-        live?: false
-      })
-      |> Repo.update!()
+    Repo.get!(Secret, id)
+    |> Secret.changeset(%{
+      live?: false
+    })
+    |> Repo.update!()
   end
 end

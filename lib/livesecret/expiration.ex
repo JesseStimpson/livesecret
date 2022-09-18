@@ -41,7 +41,7 @@ defmodule LiveSecret.Expiration do
         end
       )
 
-    count_after = Repo.aggregate(from(_s in Secret, []), :count, :id)
+    count_after = LiveSecret.Do.count_secrets()
 
     Logger.info(
       "EXPIRATION before #{inspect(now)} #{length(deleted)} deleted, #{count_after} remain"

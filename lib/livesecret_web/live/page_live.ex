@@ -38,7 +38,7 @@ defmodule LiveSecretWeb.PageLive do
 
           <%# DECRYPT MODAL (special_action == :decrypting) %>
           <% :decrypting -> %>
-            <% secret = LiveSecret.Do.get_secret!(@id) %>
+            <% secret = LiveSecret.get_secret!(@id) %>
             <%= unless is_nil(secret.content) do %>
             <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
             <% end %>
@@ -507,13 +507,13 @@ defmodule LiveSecretWeb.PageLive do
         %{"presecret" => attrs},
         socket = %{assigns: %{changeset: _changeset}}
       ) do
-    changeset = LiveSecret.Do.validate_presecret(attrs)
+    changeset = LiveSecret.validate_presecret(attrs)
     {:noreply, assign(socket, changeset: changeset)}
   end
 
   # Submit form data for secret creation
   def handle_event("create", %{"presecret" => attrs}, socket) do
-    secret = %Secret{id: id, creator_key: creator_key} = LiveSecret.Do.insert!(attrs)
+    secret = %Secret{id: id, creator_key: creator_key} = LiveSecret.insert!(attrs)
 
     {:noreply,
      socket
@@ -531,7 +531,7 @@ defmodule LiveSecretWeb.PageLive do
       ) do
     # presence meta must be updated from the "owner" process so we have to broadcast first
     # so that we can select the right user
-    LiveSecret.PubSubDo.notify_unlocked!(id, user_id)
+    LiveSecret.notify_unlocked!(id, user_id)
     {:noreply, socket}
   end
 
@@ -540,11 +540,11 @@ defmodule LiveSecretWeb.PageLive do
         _params,
         socket = %{assigns: %{live_action: :admin, id: id, users: users}}
       ) do
-    secret = LiveSecret.Do.go_async!(id)
+    secret = LiveSecret.go_async!(id)
 
     # unlock all users currently online
     for {user_id, %ActiveUser{live_action: :receiver, state: :locked}} <- users do
-      LiveSecret.PubSubDo.notify_unlocked!(id, user_id)
+      LiveSecret.notify_unlocked!(id, user_id)
     end
 
     {:noreply,
@@ -553,7 +553,7 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def handle_event("go_live", _params, socket = %{assigns: %{live_action: :admin, id: id}}) do
-    secret = LiveSecret.Do.go_live!(id)
+    secret = LiveSecret.go_live!(id)
 
     # Cannot lock a user if they're already unlocked, so no broadcast here
 
@@ -570,16 +570,15 @@ defmodule LiveSecretWeb.PageLive do
           assigns: %{id: id, current_user: current_user, live_action: live_action, users: users}
         }
       ) do
-    secret = LiveSecret.Do.get_secret!(id)
+    secret = LiveSecret.get_secret!(id)
 
     if assert_burnkey_match(params, secret) and
          live_action === :receiver do
-      LiveSecretWeb.PresenceDo.on_revealed(id, users[current_user.id])
+      LiveSecretWeb.Presence.on_revealed(id, users[current_user.id])
     end
 
     if assert_burnable(live_action, params, secret) do
-      secret =
-        %Secret{burned_at: burned_at} = LiveSecret.Do.burn!(secret, burned_by: current_user.id)
+      secret = LiveSecret.burn!(secret, burned_by: current_user.id)
 
       {:noreply,
        socket
@@ -635,7 +634,7 @@ defmodule LiveSecretWeb.PageLive do
       ) do
     case current_user.id do
       ^user_id ->
-        if LiveSecretWeb.PresenceDo.on_unlocked(id, users[user_id]) do
+        if LiveSecretWeb.Presence.on_unlocked(id, users[user_id]) do
           {:noreply,
            socket
            |> assign(special_action: :decrypting)}
@@ -700,7 +699,7 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def assert_creator_key!(socket, id, key) do
-    result = LiveSecret.Do.get_secret!(id)
+    result = LiveSecret.get_secret!(id)
     ^key = result.creator_key
     socket
   end
@@ -749,7 +748,7 @@ defmodule LiveSecretWeb.PageLive do
         {:receiver, :unlocked} -> :decrypting
       end
 
-    presence_pid = LiveSecretWeb.PresenceDo.track(id, active_user)
+    presence_pid = LiveSecretWeb.Presence.track(id, active_user)
 
     socket
     |> assign(
@@ -789,11 +788,11 @@ defmodule LiveSecretWeb.PageLive do
 
   def assign_current_user(socket) do
     socket
-    |> assign(current_user: LiveSecretWeb.PresenceDo.user_from_socket(socket))
+    |> assign(current_user: LiveSecretWeb.Presence.user_from_socket(socket))
   end
 
   def read_secret_or_redirect(socket, id) do
-    case LiveSecret.Do.get_secret(id) do
+    case LiveSecret.get_secret(id) do
       secret = %Secret{} ->
         secret
 

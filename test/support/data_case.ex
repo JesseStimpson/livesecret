@@ -24,6 +24,30 @@ defmodule LiveSecret.DataCase do
       import Ecto.Changeset
       import Ecto.Query
       import LiveSecret.DataCase
+
+      @valid_presecret_attrs %{
+        "burn_key" => "exunit-burnkey",
+        "content" => :base64.encode("encrypted-content-here"),
+        "iv" => :base64.encode(<<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1>>),
+        "duration" => "1h",
+        "mode" => "live"
+      }
+
+      @preexpired_presecret_attrs %{
+        "burn_key" => "exunit-burnkey",
+        "content" => :base64.encode("encrypted-content-here"),
+        "iv" => :base64.encode(<<0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 0, 1>>),
+        "duration" => "-1h",
+        "mode" => "live"
+      }
+
+      @invalid_presecret_attrs %{
+        "burn_key" => nil,
+        "content" => nil,
+        "iv" => nil,
+        "duration" => nil,
+        "mode" => nil
+      }
     end
   end
 

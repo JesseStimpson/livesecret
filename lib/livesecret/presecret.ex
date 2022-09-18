@@ -46,6 +46,7 @@ defmodule LiveSecret.Presecret do
   def supported_modes(), do: @modes
   def supported_durations(), do: @durations
 
+  defp duration_to_seconds("-1h"), do: -div(:timer.hours(1), 1000)
   defp duration_to_seconds("1h"), do: div(:timer.hours(1), 1000)
   defp duration_to_seconds("1d"), do: div(:timer.hours(24), 1000)
   defp duration_to_seconds("3d"), do: div(:timer.hours(24) * 3, 1000)
