@@ -9,7 +9,7 @@ defmodule LiveSecret.Secret do
   @primary_key {:id, :string, autogenerate: false}
   schema "secrets" do
     field :burn_key, :string, redact: true
-    field :burned_at, :naive_datetime
+    field :burned_at, :naive_datetime, default: nil
     field :content, :binary, redact: true
     field :iv, :binary, redact: true
     field :live?, :boolean, default: true

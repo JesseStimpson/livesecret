@@ -31,7 +31,7 @@ defmodule LiveSecret.Expiration do
         fn id, del_acc ->
           case Repo.delete(%Secret{id: id}) do
             {:ok, _} ->
-              Phoenix.PubSub.broadcast(LiveSecret.PubSub, Secret.topic(id), "expired")
+              LiveSecret.PubSubDo.notify_expired(id)
               [id | del_acc]
 
             error ->

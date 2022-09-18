@@ -38,7 +38,7 @@ defmodule LiveSecretWeb.PageLive do
 
           <%# DECRYPT MODAL (special_action == :decrypting) %>
           <% :decrypting -> %>
-            <% secret = read_secret_for_decrypt(@id) %>
+            <% secret = LiveSecret.Do.get_secret!(@id) %>
             <%= unless is_nil(secret.content) do %>
             <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
             <% end %>
@@ -98,12 +98,12 @@ defmodule LiveSecretWeb.PageLive do
     """
   end
 
+  # Intro is only rendered if user is in "locked" state and secret is not burned
   defp receiver_intro(assigns) do
     ~H"""
     <div class="pt-8 px-8 pb-2 w-full flex justify-center items-center align-center text-gray-700">
     <%= case {not is_nil(@burned_at), @user.state} do %>
-    <% {true, _} -> %>
-    <% {_, :locked} -> %>
+    <% {false, :locked} -> %>
         <h3 class="text-sm font-medium text-gray-900"></h3>
         <div class="rounded-md bg-yellow-50 p-4">
           <div class="flex">
@@ -130,24 +130,26 @@ defmodule LiveSecretWeb.PageLive do
             </div>
           </div>
         </div>
-
     <% _ -> %>
     <% end %>
     </div>
     """
   end
 
+  # Rendered for live_action = :create | :admin so that the passphrase can be held in the DOM
   defp secret_links(assigns) do
     ~H"""
     <% container_class = if @live_action == :create, do: "", else: "pt-8 px-8 pb-2" %>
     <div class={container_class}>
-      <% url = Application.fetch_env!(:livesecret, LiveSecretWeb.Endpoint)[:url] %>
-      <% scheme = (url[:scheme] || "http") %>
-      <% host = (url[:host] || "localhost") %>
-      <% port = (url[:port] || 4000) %>
-      <% oob_url = build_external_url(scheme, host, port, @to) %>
       <ul>
       <%= if @live_action == :admin do %>
+
+        <% url = Application.fetch_env!(:livesecret, LiveSecretWeb.Endpoint)[:url] %>
+        <% scheme = (url[:scheme] || "http") %>
+        <% host = (url[:host] || "localhost") %>
+        <% port = (url[:port] || 4000) %>
+        <% oob_url = build_external_url(scheme, host, port, @to) %>
+
         <div class="w-full flex justify-center items-center align-center">
         <button type="button" class={"text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500 inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "<> if @enabled, do: "", else: "line-through"}
         phx-click={JS.dispatch("live-secret:clipcopy-instructions")}
@@ -162,6 +164,7 @@ defmodule LiveSecretWeb.PageLive do
         </div>
         <.copiable id="oob-url" type={:text} value={oob_url} ignore={false} enabled={@enabled} placeholder=""/>
       <% end %>
+
         <% input_type = if @live_action == :create, do: :hidden, else: :text %>
         <.copiable id="userkey-stash" type={input_type} value="" ignore={true} enabled={@enabled} placeholder="<Admin must provide the passphrase>" />
       </ul>
@@ -455,19 +458,14 @@ defmodule LiveSecretWeb.PageLive do
   @impl true
   def mount(%{"id" => id, "key" => key}, %{}, socket = %{assigns: %{live_action: :admin}}) do
     case read_secret_or_redirect(socket, id) do
-      %Secret{burned_at: burned_at, live?: live?} ->
+      secret = %Secret{} ->
         {:ok,
          socket
          |> assign(page_title: "LiveSecret · Managing")
-         |> assert_creator_key(id, key)
+         |> assert_creator_key!(id, key)
          |> assign_current_user()
-         |> assign(
-           id: id,
-           creator_key: key,
-           burned_at: burned_at,
-           special_action: nil,
-           live?: live?
-         )
+         |> assign_secret_metadata(secret)
+         |> assign(special_action: nil)
          |> detect_presence()}
 
       socket ->
@@ -477,12 +475,13 @@ defmodule LiveSecretWeb.PageLive do
 
   def mount(%{"id" => id}, %{}, socket = %{assigns: %{live_action: :receiver}}) do
     case read_secret_or_redirect(socket, id) do
-      %Secret{burned_at: burned_at, live?: live?} ->
+      secret = %Secret{} ->
         {:ok,
          socket
          |> assign(page_title: "LiveSecret · Receiving")
          |> assign_current_user()
-         |> assign(id: id, burned_at: burned_at, special_action: nil, live?: live?)
+         |> assign_secret_metadata(secret)
+         |> assign(special_action: nil)
          |> detect_presence()}
 
       socket ->
@@ -491,14 +490,13 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def mount(_params, %{}, socket = %{assigns: %{live_action: :create}}) do
-    changeset = Presecret.changeset(Presecret.new(), %{})
-
     {:ok,
      socket
      |> assign(page_title: "LiveSecret · Secrets secured")
      |> assign_current_user()
-     |> assign(id: nil, burned_at: nil, special_action: nil, live?: true)
-     |> assign(changeset: changeset)}
+     |> assign_secret_metadata(%Secret{})
+     |> assign(special_action: nil)
+     |> assign(changeset: Presecret.changeset(Presecret.new(), %{}))}
   end
 
   @impl true
@@ -509,34 +507,18 @@ defmodule LiveSecretWeb.PageLive do
         %{"presecret" => attrs},
         socket = %{assigns: %{changeset: _changeset}}
       ) do
-    changeset =
-      %Presecret{}
-      |> Presecret.changeset(attrs)
-      |> Map.put(:action, :validate)
-
+    changeset = LiveSecret.Do.validate_presecret(attrs)
     {:noreply, assign(socket, changeset: changeset)}
   end
 
   # Submit form data for secret creation
   def handle_event("create", %{"presecret" => attrs}, socket) do
-    attrs = Presecret.make_secret_attrs(attrs)
-
-    {:ok, secret} =
-      Secret.new()
-      |> Secret.changeset(attrs)
-      |> LiveSecret.Repo.insert()
-
-    %Secret{id: id, creator_key: creator_key, burned_at: burned_at, live?: live?} = secret
+    secret = %Secret{id: id, creator_key: creator_key} = LiveSecret.Do.insert!(attrs)
 
     {:noreply,
      socket
-     |> assign(
-       id: id,
-       creator_key: creator_key,
-       changeset: nil,
-       burned_at: burned_at,
-       live?: live?
-     )
+     |> assign_secret_metadata(secret)
+     |> assign(changeset: nil)
      |> assign(page_title: "LiveSecret · Managing")
      |> push_patch(to: Routes.page_path(socket, :admin, id, %{key: creator_key}))}
   end
@@ -549,7 +531,7 @@ defmodule LiveSecretWeb.PageLive do
       ) do
     # presence meta must be updated from the "owner" process so we have to broadcast first
     # so that we can select the right user
-    :ok = Phoenix.PubSub.broadcast(LiveSecret.PubSub, Secret.topic(id), {"unlocked", user_id})
+    LiveSecret.PubSubDo.notify_unlocked!(id, user_id)
     {:noreply, socket}
   end
 
@@ -558,31 +540,26 @@ defmodule LiveSecretWeb.PageLive do
         _params,
         socket = %{assigns: %{live_action: :admin, id: id, users: users}}
       ) do
-    LiveSecret.Repo.get!(Secret, id)
-    |> Secret.changeset(%{
-      live?: false
-    })
-    |> LiveSecret.Repo.update!()
+    secret = LiveSecret.Do.go_async!(id)
 
+    # unlock all users currently online
     for {user_id, %ActiveUser{live_action: :receiver, state: :locked}} <- users do
-      :ok = Phoenix.PubSub.broadcast(LiveSecret.PubSub, Secret.topic(id), {"unlocked", user_id})
+      LiveSecret.PubSubDo.notify_unlocked!(id, user_id)
     end
 
     {:noreply,
      socket
-     |> assign(live?: false)}
+     |> assign_secret_metadata(secret)}
   end
 
   def handle_event("go_live", _params, socket = %{assigns: %{live_action: :admin, id: id}}) do
-    LiveSecret.Repo.get!(Secret, id)
-    |> Secret.changeset(%{
-      live?: true
-    })
-    |> LiveSecret.Repo.update!()
+    secret = LiveSecret.Do.go_live!(id)
+
+    # Cannot lock a user if they're already unlocked, so no broadcast here
 
     {:noreply,
      socket
-     |> assign(live?: true)}
+     |> assign_secret_metadata(secret)}
   end
 
   # Burn the secret so that no one else can access it
@@ -593,60 +570,24 @@ defmodule LiveSecretWeb.PageLive do
           assigns: %{id: id, current_user: current_user, live_action: live_action, users: users}
         }
       ) do
-    secret = LiveSecret.Repo.get!(Secret, id)
+    secret = LiveSecret.Do.get_secret!(id)
 
-    # Assert allowed to burn
-    case live_action do
-      :admin ->
-        :ok
-
-      _ ->
-        burn_key = params["secret"]["burn_key"]
-        ^burn_key = secret.burn_key
+    if assert_burnkey_match(params, secret) and
+         live_action === :receiver do
+      LiveSecretWeb.PresenceDo.on_revealed(id, users[current_user.id])
     end
 
-    burned_at = NaiveDateTime.utc_now()
+    if assert_burnable(live_action, params, secret) do
+      secret =
+        %Secret{burned_at: burned_at} = LiveSecret.Do.burn!(secret, burned_by: current_user.id)
 
-    secret
-    |> Secret.changeset(%{
-      burn_key: nil,
-      iv: nil,
-      burned_at: burned_at,
-      content: nil
-    })
-    |> LiveSecret.Repo.update!()
-
-    :ok =
-      Phoenix.PubSub.broadcast(
-        LiveSecret.PubSub,
-        Secret.topic(id),
-        {"burned", current_user.id, burned_at}
-      )
-
-    case live_action do
-      :receiver ->
-        # change state to revealed
-        active_user = users[current_user.id]
-
-        LiveSecretWeb.Presence.update(self(), Secret.topic(id), current_user.id, %ActiveUser{
-          active_user
-          | state: :revealed
-        })
-
-      _ ->
-        :ok
+      {:noreply,
+       socket
+       |> assign_secret_metadata(secret)
+       |> put_burn_flash()}
+    else
+      {:noreply, socket}
     end
-
-    {:noreply,
-     socket
-     |> assign(burned_at: burned_at)
-     |> put_burn_flash()}
-  end
-
-  # Catch-all for dev purposes
-  def handle_event(event, params, socket) do
-    IO.inspect({event, params})
-    {:noreply, socket}
   end
 
   @impl true
@@ -659,11 +600,11 @@ defmodule LiveSecretWeb.PageLive do
         socket = %{assigns: %{live_action: :admin}}
       ) do
     case read_secret_or_redirect(socket, id) do
-      %Secret{burned_at: burned_at, live?: live?} ->
+      secret = %Secret{} ->
         {:noreply,
          socket
-         |> assert_creator_key(id, key)
-         |> assign(id: id, creator_key: key, burned_at: burned_at, live?: live?)
+         |> assert_creator_key!(id, key)
+         |> assign_secret_metadata(secret)
          |> detect_presence()}
 
       socket ->
@@ -671,7 +612,6 @@ defmodule LiveSecretWeb.PageLive do
     end
   end
 
-  # Catch-all for dev
   def handle_params(_, _, socket) do
     {:noreply, socket}
   end
@@ -690,25 +630,17 @@ defmodule LiveSecretWeb.PageLive do
   # Broadcast to all listeners when a user is unlocked. However, only the specific user
   # should do anything with it.
   def handle_info(
-        {"unlocked", user_id},
+        {:unlocked, user_id},
         socket = %{assigns: %{current_user: current_user, id: id, users: users}}
       ) do
     case current_user.id do
       ^user_id ->
-        case users[user_id] do
-          active_user = %ActiveUser{live_action: :receiver, state: :locked, left_at: nil} ->
-            {:ok, _} =
-              LiveSecretWeb.Presence.update(self(), Secret.topic(id), user_id, %ActiveUser{
-                active_user
-                | state: :unlocked
-              })
-
-            {:noreply,
-             socket
-             |> assign(special_action: :decrypting)}
-
-          _ ->
-            {:noreply, socket}
+        if LiveSecretWeb.PresenceDo.on_unlocked(id, users[user_id]) do
+          {:noreply,
+           socket
+           |> assign(special_action: :decrypting)}
+        else
+          {:noreply, socket}
         end
 
       _ ->
@@ -718,7 +650,7 @@ defmodule LiveSecretWeb.PageLive do
 
   # All subscribers are informed the secret has been burned
   def handle_info(
-        {"burned", burned_by, burned_at},
+        {:burned, burned_at, burned_by: burned_by},
         socket = %{assigns: %{current_user: current_user}}
       ) do
     case current_user.id do
@@ -734,20 +666,11 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   # All subscribers are informed the secret has been expired
-  def handle_info(
-        "expired",
-        socket
-      ) do
+  def handle_info(:expired, socket) do
     {:noreply,
      socket
      |> put_flash(:info, "The secret has expired. You've been redirected to the home page.")
      |> push_redirect(to: Routes.page_path(socket, :create))}
-  end
-
-  # Catch-all for dev
-  def handle_info(info, socket) do
-    IO.inspect(info, label: "info")
-    {:noreply, socket}
   end
 
   defp handle_joins(socket, joins) do
@@ -776,10 +699,32 @@ defmodule LiveSecretWeb.PageLive do
     end)
   end
 
-  def assert_creator_key(socket, id, key) do
-    result = LiveSecret.Repo.get!(Secret, id)
+  def assert_creator_key!(socket, id, key) do
+    result = LiveSecret.Do.get_secret!(id)
     ^key = result.creator_key
     socket
+  end
+
+  def assert_burnkey_match(params, secret) do
+    burn_key = params["secret"]["burn_key"]
+
+    case secret.burn_key do
+      ^burn_key ->
+        true
+
+      _ ->
+        false
+    end
+  end
+
+  def assert_burnable(live_action, params, secret) do
+    case live_action do
+      :admin ->
+        true
+
+      _ ->
+        assert_burnkey_match(params, secret)
+    end
   end
 
   def detect_presence(socket = %{assigns: %{presence: _}}) do
@@ -790,8 +735,6 @@ defmodule LiveSecretWeb.PageLive do
         socket = %{assigns: %{current_user: user, id: id, live_action: live_action, live?: live?}}
       )
       when not is_nil(user) do
-    topic = Secret.topic(id)
-
     active_user = %ActiveUser{
       id: user[:id],
       live_action: live_action,
@@ -806,16 +749,7 @@ defmodule LiveSecretWeb.PageLive do
         {:receiver, :unlocked} -> :decrypting
       end
 
-    presence_pid =
-      case LiveSecretWeb.Presence.track(self(), topic, user[:id], active_user) do
-        {:ok, pid} ->
-          pid
-
-        {:error, {:already_tracked, pid, _topic, _userid}} ->
-          pid
-      end
-
-    :ok = Phoenix.PubSub.subscribe(LiveSecret.PubSub, topic)
+    presence_pid = LiveSecretWeb.PresenceDo.track(id, active_user)
 
     socket
     |> assign(
@@ -823,7 +757,7 @@ defmodule LiveSecretWeb.PageLive do
       presence: presence_pid,
       special_action: special_action
     )
-    |> handle_joins(LiveSecretWeb.Presence.list(topic))
+    |> handle_joins(LiveSecretWeb.Presence.list(Secret.topic(id)))
   end
 
   def detect_presence(socket = %{assigns: %{id: id}}) do
@@ -834,28 +768,19 @@ defmodule LiveSecretWeb.PageLive do
     |> handle_joins(LiveSecretWeb.Presence.list(topic))
   end
 
-  def connect_info?(socket) do
-    case socket.private[:connect_info] do
-      nil ->
-        false
-
-      %Plug.Conn{} ->
-        # User id cannot be constructed until the websocket connects, so the first render
-        # does not have a current_user so the presence list is not shown
-        false
-
-      _ ->
-        true
-    end
-  end
-
-  def connect_info_user(conn = %Plug.Conn{}) do
-    connect_info_user(%{peer_data: Plug.Conn.get_peer_data(conn), label: "unknown connect info"})
-  end
-
-  def connect_info_user(_connect_info = %{peer_data: %{address: address, port: port}}) do
-    address = :erlang.iolist_to_binary(:inet.ntoa(address))
-    %{id: "#{address}:#{port}"}
+  defp assign_secret_metadata(socket, %Secret{
+         id: id,
+         creator_key: creator_key,
+         burned_at: burned_at,
+         live?: live?
+       }) do
+    socket
+    |> assign(
+      id: id,
+      creator_key: creator_key,
+      burned_at: burned_at,
+      live?: live?
+    )
   end
 
   def assign_current_user(socket = %{assigns: %{current_user: u}}) when not is_nil(u) do
@@ -863,17 +788,12 @@ defmodule LiveSecretWeb.PageLive do
   end
 
   def assign_current_user(socket) do
-    if connect_info?(socket) do
-      socket
-      |> assign(current_user: connect_info_user(socket.private[:connect_info]))
-    else
-      socket
-      |> assign(current_user: nil)
-    end
+    socket
+    |> assign(current_user: LiveSecretWeb.PresenceDo.user_from_socket(socket))
   end
 
   def read_secret_or_redirect(socket, id) do
-    case LiveSecret.Repo.get(Secret, id) do
+    case LiveSecret.Do.get_secret(id) do
       secret = %Secret{} ->
         secret
 
@@ -887,10 +807,6 @@ defmodule LiveSecretWeb.PageLive do
         )
         |> push_redirect(to: Routes.page_path(socket, :create))
     end
-  end
-
-  defp read_secret_for_decrypt(id) do
-    LiveSecret.Repo.get!(Secret, id)
   end
 
   def put_burn_flash(socket = %{assigns: %{live_action: :admin}}) do
