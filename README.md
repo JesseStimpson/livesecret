@@ -110,5 +110,4 @@ Ready to run in production? Please [check Phoenix's deployment guides](https://h
 
 ## Next
 1. JavaScript and LiveView unit tests
-2. Whole-database encryption of the SQLite DB file ([reference](https://cone.codes/posts/encrypted-sqlite-with-ecto/))
-3. Change "Joined at" to "Joined since" and update incrementing counter
+2. Change "Joined at" to "Joined since" and update incrementing counter

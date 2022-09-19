@@ -461,7 +461,7 @@ defmodule LiveSecretWeb.PageLive do
       secret = %Secret{} ->
         {:ok,
          socket
-         |> assign(page_title: "LiveSecret · Managing")
+         |> assign(page_title: "Managing Secret · LiveSecret")
          |> assert_creator_key!(id, key)
          |> assign_current_user()
          |> assign_secret_metadata(secret)
@@ -478,7 +478,7 @@ defmodule LiveSecretWeb.PageLive do
       secret = %Secret{} ->
         {:ok,
          socket
-         |> assign(page_title: "LiveSecret · Receiving")
+         |> assign(page_title: "Receiving Secret · LiveSecret")
          |> assign_current_user()
          |> assign_secret_metadata(secret)
          |> assign(special_action: nil)
@@ -492,7 +492,7 @@ defmodule LiveSecretWeb.PageLive do
   def mount(_params, %{}, socket = %{assigns: %{live_action: :create}}) do
     {:ok,
      socket
-     |> assign(page_title: "LiveSecret · Secrets secured")
+     |> assign(page_title: "LiveSecret")
      |> assign_current_user()
      |> assign_secret_metadata(%Secret{})
      |> assign(special_action: nil)
@@ -519,7 +519,7 @@ defmodule LiveSecretWeb.PageLive do
      socket
      |> assign_secret_metadata(secret)
      |> assign(changeset: nil)
-     |> assign(page_title: "LiveSecret · Managing")
+     |> assign(page_title: "Managing Secret · LiveSecret")
      |> push_patch(to: Routes.page_path(socket, :admin, id, %{key: creator_key}))}
   end
 
