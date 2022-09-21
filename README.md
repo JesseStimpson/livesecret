@@ -58,14 +58,14 @@ the secret even if they know the passphrase. An Admin can unlock a recipient by 
 button in the Admin View. When a recipient is Unlocked, they will be prompted for the passphrase, and if correct,
 the cleartext content is displayed. 
 
-**Async mode is for asynchronous sharing.** When a secret is not in Async mode, all users are Unlocked by default. 
+**Async mode is for asynchronous sharing.** When a secret is in Async mode, all users are Unlocked by default. 
 If an attacker intercepts the URL and passphrase before the secret is burned, they will be able to decrypt the message.
 
 ### Burn after reading
 After a successful decryption event, the ciphertext is deleted from the server. This makes it very
 likely that the cleartext is revealed to exactly 2 people: the author and the
 receiver. While we can't give a cryptographic guarantee that exactly 2 clients were involved,
-Live Presence can help to bolster the likelihood. Also, Live Secrets give near-certainty that
+Live Presence can help to bolster the likelihood. Also, Live-mode Secrets give near-certainty that
 the cleartext is revealed only to the expected recipient.
 
 Once burned, the URL can still be visited, but there are no actions to be taken by any party. A
