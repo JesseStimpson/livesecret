@@ -89,8 +89,9 @@ defmodule LiveSecretWeb do
       # Use all HTML functionality (forms, tags, etc)
       use Phoenix.HTML
 
-      # Import LiveView and .heex helpers (live_render, live_patch, <.form>, etc)
-      import Phoenix.LiveView.Helpers
+      # Import LiveView and .heex helpers
+      import Phoenix.LiveView.Helpers # soft deprecated, but still required for live_title_tag
+      import Phoenix.Component
 
       # Import basic rendering functionality (render, render_layout, etc)
       import Phoenix.View

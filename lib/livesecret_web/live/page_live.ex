@@ -24,24 +24,21 @@ defmodule LiveSecretWeb.PageLive do
         <div class="rounded-lg bg-white px-5 py-6 shadow sm:px-6">
 
           <%# BREADCRUMB %>
-          <%= unless is_nil(@id) do %>
           <LiveSecretWeb.BreadcrumbComponent.show
+            :if={not is_nil(@id)}
             home={Routes.page_path(@socket, :create)}
             id={@id}
             live_action={@live_action}
             burned_at={@burned_at}
             live?={@live?}
             />
-          <% end %>
 
           <%= case @special_action do %>
 
           <%# DECRYPT MODAL (special_action == :decrypting) %>
           <% :decrypting -> %>
             <% secret = LiveSecret.get_secret!(@id) %>
-            <%= unless is_nil(secret.content) do %>
-            <.decrypt_modal secret={secret} changeset={Secret.changeset(secret, %{})} />
-            <% end %>
+            <.decrypt_modal :if={not is_nil(secret.content)} secret={secret} changeset={Secret.changeset(secret, %{})} />
           <% _ -> %>
           <% end %>
 
@@ -62,14 +59,13 @@ defmodule LiveSecretWeb.PageLive do
             <.secret_links live_action={@live_action} to={Routes.page_path(@socket, :receiver, @id)} enabled={is_nil(@burned_at)}/>
 
             <.section_header >Online now</.section_header>
-            <%= unless is_nil(@current_user) do %>
-              <LiveSecretWeb.UserListComponent.view
-                self={@current_user.id}
-                live_action={@live_action}
-                users={@users}
-                burned_at={@burned_at}
-                />
-            <% end %>
+            <LiveSecretWeb.UserListComponent.view
+              :if={not is_nil(@current_user)}
+              self={@current_user.id}
+              live_action={@live_action}
+              users={@users}
+              burned_at={@burned_at}
+              />
 
             <.section_header>Actions</.section_header>
             <.action_panel burned_at={@burned_at} live?={@live?} />
@@ -78,14 +74,15 @@ defmodule LiveSecretWeb.PageLive do
           <% :receiver -> %>
             <% user = if is_nil(@current_user), do: nil, else: @users[@current_user.id] %>
 
-            <%= unless is_nil(user) do %>
-              <.receiver_intro user={user} burned_at={@burned_at} live?={@live?} />
-            <% end %>
+            <.receiver_intro :if={not is_nil(user)} user={user} burned_at={@burned_at} live?={@live?} />
 
             <.section_header>Online now</.section_header>
-            <%= unless is_nil(@current_user) do %>
-              <LiveSecretWeb.UserListComponent.view self={@current_user.id} live_action={@live_action} users={@users} burned_at={@burned_at} />
-            <% end %>
+            <LiveSecretWeb.UserListComponent.view
+              :if={not is_nil(@current_user)}
+              self={@current_user.id}
+              live_action={@live_action}
+              users={@users}
+              burned_at={@burned_at} />
 
             <.section_header>Help</.section_header>
             <.help live_action={@live_action}/>
@@ -151,16 +148,14 @@ defmodule LiveSecretWeb.PageLive do
         <% oob_url = build_external_url(scheme, host, port, @to) %>
 
         <div class="w-full flex justify-center items-center align-center">
-        <button type="button" class={"text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500 inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "<> if @enabled, do: "", else: "line-through"}
-        phx-click={JS.dispatch("live-secret:clipcopy-instructions")}
-        disabled={not @enabled}
-        >
-        Copy as Markdown
-        <.action_icon has_text={true} id={:markdown} />
-        </button>
-        <%= if @enabled do %>
-          <div id="show-passphrase-after-create" phx-hook="ShowPassphraseAfterCreate" ></div>
-        <% end %>
+          <button type="button" class={"text-blue-700 bg-blue-100 hover:bg-blue-200 focus:ring-blue-500 inline-flex items-center justify-center rounded-md border border-transparent px-4 py-2 font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 sm:text-sm "<> if @enabled, do: "", else: "line-through"}
+          phx-click={JS.dispatch("live-secret:clipcopy-instructions")}
+          disabled={not @enabled}
+          >
+          Copy as Markdown
+          <.action_icon has_text={true} id={:markdown} />
+          </button>
+          <div :if={@enabled} id="show-passphrase-after-create" phx-hook="ShowPassphraseAfterCreate" ></div>
         </div>
         <.copiable id="oob-url" type={:text} value={oob_url} ignore={false} enabled={@enabled} placeholder=""/>
       <% end %>
@@ -176,13 +171,11 @@ defmodule LiveSecretWeb.PageLive do
     ~H"""
     <li class="flex flex-nowrap my-2">
 
-    <%= unless @type == :hidden do %>
-      <button type="button" disabled={not @enabled} class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm"
-      phx-click={if @enabled, do: JS.dispatch("live-secret:clipcopy", to: "##{@id}")}
-      >
-      <.action_icon has_text={false} id={:clipboard} />
-      </button>
-    <% end %>
+    <button :if={@type != :hidden} type="button" disabled={not @enabled} class="inline-flex items-center rounded-l-md border border-r-0 border-gray-300 bg-gray-50 px-3 text-gray-500 sm:text-sm"
+    phx-click={if @enabled, do: JS.dispatch("live-secret:clipcopy", to: "##{@id}")}
+    >
+    <.action_icon has_text={false} id={:clipboard} />
+    </button>
 
     <% input_class = "font-mono block w-full min-w-0 flex-1 rounded-none rounded-r-md border-gray-300 px-3 py-2 focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm text-gray-700 hover:text-gray-900" %>
 
@@ -365,9 +358,7 @@ defmodule LiveSecretWeb.PageLive do
         disabled={not @action_enabled}
         >
         <%= @action_text %>
-        <%= unless is_nil(@action_icon) do %>
-        <.action_icon has_text={true} id={@action_icon} />
-        <% end %>
+        <.action_icon :if={not is_nil(@action_icon)} has_text={true} id={@action_icon} />
         </button>
       </div>
     </li>
@@ -669,7 +660,7 @@ defmodule LiveSecretWeb.PageLive do
     {:noreply,
      socket
      |> put_flash(:info, "The secret has expired. You've been redirected to the home page.")
-     |> push_redirect(to: Routes.page_path(socket, :create))}
+     |> push_navigate(to: Routes.page_path(socket, :create))}
   end
 
   defp handle_joins(socket, joins) do
@@ -804,7 +795,7 @@ defmodule LiveSecretWeb.PageLive do
           :error,
           "That secret doesn't exist. You've been redirected to the home page."
         )
-        |> push_redirect(to: Routes.page_path(socket, :create))
+        |> push_navigate(to: Routes.page_path(socket, :create))
     end
   end
 
