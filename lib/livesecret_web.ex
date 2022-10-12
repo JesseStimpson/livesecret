@@ -90,7 +90,8 @@ defmodule LiveSecretWeb do
       use Phoenix.HTML
 
       # Import LiveView and .heex helpers
-      import Phoenix.LiveView.Helpers # soft deprecated, but still required for live_title_tag
+      # Note: Phoenix.LiveView.Helpers is soft deprecated, but still required for live_title_tag
+      import Phoenix.LiveView.Helpers
       import Phoenix.Component
 
       # Import basic rendering functionality (render, render_layout, etc)

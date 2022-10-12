@@ -5,16 +5,28 @@ defmodule LiveSecretWeb.SecretFormComponent do
 
   def create(assigns) do
     ~H"""
-    <.form let={f} for={@changeset} action="#" class="relative" id="secret-form" phx-change="validate" phx-submit="create" autocomplete="off">
+    <.form
+      :let={f}
+      for={@changeset}
+      action="#"
+      class="relative"
+      id="secret-form"
+      phx-change="validate"
+      phx-submit="create"
+      autocomplete="off"
+    >
       <div class="overflow-hidden rounded-lg border border-gray-300 shadow-sm focus-within:border-indigo-500 focus-within:ring-1 focus-within:ring-indigo-500">
-        <%= label f, :content, class: "block text-xs font-medium text-gray-700 pt-2 px-2"%>
+        <%= label(f, :content, class: "block text-xs font-medium text-gray-700 pt-2 px-2") %>
         <div phx-update="ignore" id="cleartext-div-for-ignore">
-          <textarea id="cleartext" class="h-24 sm:h-64 pt-3 block w-full resize-y border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono" placeholder="Put your secret information here..." />
+          <textarea
+            id="cleartext"
+            class="h-24 sm:h-64 pt-3 block w-full resize-y border-0 py-0 placeholder-gray-500 focus:ring-0 font-mono"
+            placeholder="Put your secret information here..."
+          />
         </div>
-        <%= hidden_input f, :content, id: "ciphertext" %>
-        <%= hidden_input f, :iv, id: "iv" %>
-        <%= hidden_input f, :burn_key, id: "burnkey" %>
-
+        <%= hidden_input(f, :content, id: "ciphertext") %>
+        <%= hidden_input(f, :iv, id: "iv") %>
+        <%= hidden_input(f, :burn_key, id: "burnkey") %>
         <!-- Spacer element to match the height of the toolbar -->
         <.spacer />
       </div>
@@ -22,8 +34,20 @@ defmodule LiveSecretWeb.SecretFormComponent do
       <div class="absolute inset-x-px bottom-0">
         <!-- Actions: These are just examples to demonstrate the concept, replace/wire these up however makes sense for your project. -->
         <div class="flex flex-nowrap justify-end space-x-2 py-2 px-2 sm:px-3">
-        <.param_choice f={f} changeset={@changeset} list={@modes} field={:mode} icon={%{live: :lock, async: :unlock}}/>
-        <.param_choice f={f} changeset={@changeset} list={@durations} field={:duration} icon={:calendar}/>
+          <.param_choice
+            f={f}
+            changeset={@changeset}
+            list={@modes}
+            field={:mode}
+            icon={%{live: :lock, async: :unlock}}
+          />
+          <.param_choice
+            f={f}
+            changeset={@changeset}
+            list={@durations}
+            field={:duration}
+            icon={:calendar}
+          />
         </div>
 
         <div class="flex items-center justify-between space-x-3 border-t border-gray-200 px-2 py-2 sm:px-3">
@@ -40,24 +64,43 @@ defmodule LiveSecretWeb.SecretFormComponent do
     <div class="flex-shrink-0">
       <label id={"listbox-label-#{@field}"} class="sr-only"> Add an expiration </label>
       <div class="relative">
-        <button type="button" class="relative inline-flex items-center whitespace-nowrap rounded-full bg-gray-50 py-2 px-2 text-sm font-medium text-gray-500 hover:bg-gray-100 sm:px-3" aria-haspopup="listbox" aria-expanded="true" aria-labelledby={"listbox-label-#{@field}"}
-          phx-click={ JS.toggle( to: "##{@field}-popover") }
+        <button
+          type="button"
+          class="relative inline-flex items-center whitespace-nowrap rounded-full bg-gray-50 py-2 px-2 text-sm font-medium text-gray-500 hover:bg-gray-100 sm:px-3"
+          aria-haspopup="listbox"
+          aria-expanded="true"
+          aria-labelledby={"listbox-label-#{@field}"}
+          phx-click={JS.toggle(to: "##{@field}-popover")}
         >
           <% choice = Ecto.Changeset.fetch_field!(@changeset, @field) %>
-          <.toolbar_icon id={@icon} choice={choice}/>
+          <.toolbar_icon id={@icon} choice={choice} />
           <span class="hidden truncate sm:ml-2 sm:block"><.choice_text v={choice} /></span>
-          <%= hidden_input @f, @field, id: "#{@field}" %>
+          <%= hidden_input(@f, @field, id: "#{@field}") %>
         </button>
 
-        <ul id={"#{@field}-popover"} class="hidden absolute right-0 z-10 mt-1 max-h-56 w-52 overflow-auto rounded-lg bg-white py-3 text-base shadow ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm" tabindex="-1" role="listbox" aria-labelledby={"listbox-label-#{@field}"} aria-activedescendant="listbox-option-0"
+        <ul
+          id={"#{@field}-popover"}
+          class="hidden absolute right-0 z-10 mt-1 max-h-56 w-52 overflow-auto rounded-lg bg-white py-3 text-base shadow ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm"
+          tabindex="-1"
+          role="listbox"
+          aria-labelledby={"listbox-label-#{@field}"}
+          aria-activedescendant="listbox-option-0"
           phx-click-away={JS.hide(to: "##{@field}-popover")}
         >
           <%= for item <- @list do %>
-            <li class="bg-white relative cursor-default select-none py-2 px-3 hover:bg-gray-100" role="option"
-            phx-click={JS.hide(to: "##{@field}-popover") |> JS.dispatch("live-secret:select-choice", to: "##{@field}", detail: %{"value" => item})}
+            <li
+              class="bg-white relative cursor-default select-none py-2 px-3 hover:bg-gray-100"
+              role="option"
+              phx-click={
+                JS.hide(to: "##{@field}-popover")
+                |> JS.dispatch("live-secret:select-choice",
+                  to: "##{@field}",
+                  detail: %{"value" => item}
+                )
+              }
             >
               <div class="flex items-center">
-                <span class="block truncate font-medium"><.choice_text v={item}/></span>
+                <span class="block truncate font-medium"><.choice_text v={item} /></span>
               </div>
             </li>
           <% end %>
@@ -70,20 +113,50 @@ defmodule LiveSecretWeb.SecretFormComponent do
   def toolbar_icon(assigns) do
     ~H"""
     <%= case @id do %>
-    <% :calendar -> %>
-      <svg class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z" clip-rule="evenodd" />
-      </svg>
-    <% :lock -> %>
-      <svg class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z" clip-rule="evenodd" />
-      </svg>
-    <% :unlock -> %>
-      <svg class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
-        <path fill-rule="evenodd" d="M14.5 1A4.5 4.5 0 0010 5.5V9H3a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1.5V5.5a3 3 0 116 0v2.75a.75.75 0 001.5 0V5.5A4.5 4.5 0 0014.5 1z" clip-rule="evenodd" />
-      </svg>
-    <% map when is_map(map) -> %>
-      <.toolbar_icon id={map[@choice]} choice={@choice} />
+      <% :calendar -> %>
+        <svg
+          class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M5.75 2a.75.75 0 01.75.75V4h7V2.75a.75.75 0 011.5 0V4h.25A2.75 2.75 0 0118 6.75v8.5A2.75 2.75 0 0115.25 18H4.75A2.75 2.75 0 012 15.25v-8.5A2.75 2.75 0 014.75 4H5V2.75A.75.75 0 015.75 2zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      <% :lock -> %>
+        <svg
+          class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 1a4.5 4.5 0 00-4.5 4.5V9H5a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-.5V5.5A4.5 4.5 0 0010 1zm3 8V5.5a3 3 0 10-6 0V9h6z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      <% :unlock -> %>
+        <svg
+          class="h-5 w-5 flex-shrink-0 text-gray-300 sm:-ml-1"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+          aria-hidden="true"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M14.5 1A4.5 4.5 0 0010 5.5V9H3a2 2 0 00-2 2v6a2 2 0 002 2h10a2 2 0 002-2v-6a2 2 0 00-2-2h-1.5V5.5a3 3 0 116 0v2.75a.75.75 0 001.5 0V5.5A4.5 4.5 0 0014.5 1z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      <% map when is_map(map) -> %>
+        <.toolbar_icon id={map[@choice]} choice={@choice} />
     <% end %>
     """
   end
@@ -110,7 +183,13 @@ defmodule LiveSecretWeb.SecretFormComponent do
       <div class="w-full">
         <label class="block text-xs font-medium text-gray-700">Passphrase</label>
         <div phx-update="ignore" id="passphrase-div-for-ignore">
-          <input type="text", id="passphrase" class="block w-full border-0 text-sm font-medium placeholder-gray-500 focus:ring-0 font-mono" placeholder="(generated)" >
+          <input
+            type="text"
+            ,
+            id="passphrase"
+            class="block w-full border-0 text-sm font-medium placeholder-gray-500 focus:ring-0 font-mono"
+            placeholder="(generated)"
+          />
         </div>
       </div>
     </div>
@@ -120,9 +199,13 @@ defmodule LiveSecretWeb.SecretFormComponent do
   def create_button(assigns) do
     ~H"""
     <div class="flex-shrink-0">
-      <button type="button" class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-      phx-click={JS.dispatch("live-secret:create-secret")}
-      >Encrypt</button>
+      <button
+        type="button"
+        class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
+        phx-click={JS.dispatch("live-secret:create-secret")}
+      >
+        Encrypt
+      </button>
     </div>
     """
   end
@@ -130,20 +213,20 @@ defmodule LiveSecretWeb.SecretFormComponent do
   def choice_text(assigns) do
     ~H"""
     <%= case @v do %>
-    <% "1h" -> %>
-    1 hour
-    <% "1d" -> %>
-    1 day
-    <% "3d" -> %>
-    3 days
-    <% "1w" -> %>
-    1 week
-    <% :live -> %>
-    Live
-    <% :async -> %>
-    Async
-    <% _ -> %>
-    error
+      <% "1h" -> %>
+        1 hour
+      <% "1d" -> %>
+        1 day
+      <% "3d" -> %>
+        3 days
+      <% "1w" -> %>
+        1 week
+      <% :live -> %>
+        Live
+      <% :async -> %>
+        Async
+      <% _ -> %>
+        error
     <% end %>
     """
   end
