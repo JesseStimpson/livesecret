@@ -1,11 +1,19 @@
 <main>
-  <button type="button" class="alert bg-green-50 text-green-800 text-center w-full" role="alert"
+  <button
+    type="button"
+    class="alert bg-green-50 text-green-800 text-center w-full"
+    role="alert"
     phx-click="lv:clear-flash"
-    phx-value-key="info"><%= live_flash(@flash, :info) %></button>
+    phx-value-key="info"
+  ><%= live_flash(@flash, :info) %></button>
 
-  <button type="button" class="alert bg-red-50 text-red-800 text-center w-full" role="alert"
+  <button
+    type="button"
+    class="alert bg-red-50 text-red-800 text-center w-full"
+    role="alert"
     phx-click="lv:clear-flash"
-    phx-value-key="error"><%= live_flash(@flash, :error) %></button>
+    phx-value-key="error"
+  ><%= live_flash(@flash, :error) %></button>
 
   <%= @inner_content %>
 </main>
