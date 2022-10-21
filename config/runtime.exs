@@ -60,4 +60,18 @@ if config_env() == :prod do
     secret_key_base: secret_key_base
 
   config :livesecret, LiveSecret.Expiration, interval: :timer.seconds(20)
+
+  config :livesecret, LiveSecretWeb.Presence,
+    behind_proxy:
+      "true" ==
+        (System.get_env("BEHIND_PROXY") ||
+           raise("""
+           environment variable BEHIND_PROXY is missing.
+
+           Use "true" if there is at least 1 reverse proxy between your client
+           and the LiveSecret Phoenix server. It is strongly recommended to
+           use a reverse proxy. If "true", also be sure to set REMOTE_IP_HEADER
+           to define a trusted x-header to avoid spoofing.
+           """)),
+    remote_ip_header: System.get_env("REMOTE_IP_HEADER") || "x-forwarded-for"
 end

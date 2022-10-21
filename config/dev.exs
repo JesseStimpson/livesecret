@@ -64,6 +64,8 @@ config :livesecret, LiveSecretWeb.Endpoint,
 
 config :livesecret, LiveSecret.Expiration, interval: :timer.seconds(20)
 
+config :livesecret, LiveSecretWeb.Presence, behind_proxy: false
+
 # Do not include metadata nor timestamps in development logs
 config :logger, :console, format: "[$level] $message\n"
 

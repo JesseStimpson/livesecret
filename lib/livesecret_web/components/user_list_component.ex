@@ -8,7 +8,7 @@ defmodule LiveSecretWeb.UserListComponent do
     <div class="py-4">
       <div class="overflow-hidden bg-white shadow rounded-md">
         <ul role="list" class="divide-y divide-gray-200">
-          <%= for {user_id, active_user} <- sort_users(@users, @self) do %>
+          <%= for {_user_id, active_user} <- sort_users(@users, @self) do %>
             <li>
               <div class="block sm:flex items-center px-4 py-4 sm:px-6">
                 <div class="flex min-w-0 flex-1 items-center">
@@ -45,7 +45,7 @@ defmodule LiveSecretWeb.UserListComponent do
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="truncate text-small"><code><%= user_id %></code></span>
+                        <span class="truncate text-small"><code><%= active_user.name %></code></span>
                       </p>
                       <p class="mt-2 flex items-center text-sm text-gray-500">
                         <!-- Heroicon name: mini/clock -->

@@ -98,7 +98,25 @@ To start the LiveSecret Phoenix server:
 
 Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
-Ready to run in production? Please [check Phoenix's deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+### Ready to run in production?
+
+Please [check Phoenix's deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+
+There are a few required environment variables when running in production. You can view
+`fly.toml` in this repo for the values I've used for the demo, but it will be important for
+you to set these to values relevant to your deployment:
+
+Standard Phoenix:
+* `DATABASE_PATH`: Path to the sqlite database on the filesystem
+* `PHX_HOST`: The hostname that is presented to the user's browser
+* `PORT`: The port that Phoenix listens on
+* `SECRET_KEY_BASE`: Standard Phoenix env var for encrypting cookie, etc
+
+Unique to LiveSecret:
+* `BEHIND_PROXY`: When `"true"` LiveSecret Presence discovers the user's IP address via the
+   configured x-header. It is strongly recommended to use a reverse proxy.
+* `REMOTE_IP_HEADER`: The trusted x-header that presents the end user's IP address. It must
+   start with "x-"
 
 ## Learn more about Phoenix
 

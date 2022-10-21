@@ -33,16 +33,47 @@ defmodule LiveSecretWeb.Presence do
     end
   end
 
-  defp user_from_connect_info(conn = %Plug.Conn{}) do
-    user_from_connect_info(%{
-      peer_data: Plug.Conn.get_peer_data(conn),
-      label: "unknown connect info"
-    })
-  end
+  defp user_from_connect_info(
+         _connect_info = %{peer_data: %{address: address, port: port}, x_headers: x_headers}
+       ) do
+    presence_config = Application.fetch_env!(:livesecret, LiveSecretWeb.Presence)
 
-  defp user_from_connect_info(_connect_info = %{peer_data: %{address: address, port: port}}) do
-    address = :erlang.iolist_to_binary(:inet.ntoa(address))
-    %{id: "#{address}:#{port}"}
+    direct_address = :erlang.iolist_to_binary(:inet.ntoa(address))
+    direct_id = "#{direct_address}:#{port}"
+
+    user_data =
+      case presence_config[:behind_proxy] do
+        true ->
+          # You can only configure headers that start with "x-" because that's all LiveView is
+          # presenting to us in the connect_info. Is there a way to support a header that
+          # does not start with "x-", for example "Fly-Client-Ip"?
+          #
+          # The remote_ip application does support more configuration options, but for now
+          # LiveSecret only supports configuring a header.
+          address = RemoteIp.from(x_headers, headers: [presence_config[:remote_ip_header]])
+
+          # A lack of address is not acceptable. If we crash here, something is wrong with
+          # the reverse proxy. Ensure that it is presenting the expected headers to work
+          # with the remote_ip application.
+          #
+          # Note: Make sure you are not pointing your browser at the Phoenix port when setting
+          # :behind_proxy to true
+          not is_nil(address) ||
+            raise """
+            LiveSecret was not able to find the client address from the configured header
+            #{presence_config[:remote_ip_header]}.
+              1. Do not point a browser directly at the Phoenix port when running BEHIND_PROXY=true
+              2. Ensure you have configured the trusted header containing the client IP address (REMOTE_IP_HEADER)
+            """
+
+          address = :erlang.iolist_to_binary(:inet.ntoa(address))
+          %{id: "#{address}__via__#{direct_id}", name: "#{address} (via #{direct_id})"}
+
+        false ->
+          %{id: direct_id, name: direct_id}
+      end
+
+    user_data
   end
 
   @doc """
