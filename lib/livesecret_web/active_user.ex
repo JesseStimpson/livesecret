@@ -4,6 +4,7 @@ defmodule LiveSecretWeb.ActiveUser do
   alias LiveSecretWeb.ActiveUser
 
   schema "active_users" do
+    field :name, :string
     field :live_action, Ecto.Enum, values: [:admin, :receiver]
     field :joined_at, :naive_datetime
     field :left_at, :naive_datetime

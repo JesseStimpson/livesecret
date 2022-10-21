@@ -903,6 +903,7 @@ defmodule LiveSecretWeb.PageLive do
       when not is_nil(user) do
     active_user = %ActiveUser{
       id: user[:id],
+      name: user[:name],
       live_action: live_action,
       joined_at: NaiveDateTime.utc_now(),
       state: if(live?, do: :locked, else: :unlocked)
