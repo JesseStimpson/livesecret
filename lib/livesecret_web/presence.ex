@@ -50,7 +50,11 @@ defmodule LiveSecretWeb.Presence do
           #
           # The remote_ip application does support more configuration options, but for now
           # LiveSecret only supports configuring a header.
-          address = RemoteIp.from(x_headers, headers: [presence_config[:remote_ip_header]])
+          address =
+            RemoteIp.from(x_headers,
+              headers: [presence_config[:remote_ip_header]],
+              proxies: presence_config[:remote_ip_proxies]
+            )
 
           # A lack of address is not acceptable. If we crash here, something is wrong with
           # the reverse proxy. Ensure that it is presenting the expected headers to work

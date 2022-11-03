@@ -73,5 +73,11 @@ if config_env() == :prod do
            use a reverse proxy. If "true", also be sure to set REMOTE_IP_HEADER
            to define a trusted x-header to avoid spoofing.
            """)),
-    remote_ip_header: System.get_env("REMOTE_IP_HEADER") || "x-forwarded-for"
+    remote_ip_header: System.get_env("REMOTE_IP_HEADER") || "x-forwarded-for",
+    remote_ip_proxies:
+      (case System.get_env("REMOTE_IP_PROXIES") do
+         nil -> []
+         "" -> []
+         proxies -> String.split(proxies, ",")
+       end)
 end
