@@ -383,7 +383,7 @@ defmodule LiveSecretWeb.PageLive do
                 <div class="block">
                   <p class="text-md text-gray-700">Success!</p>
                   <p class="text-sm text-gray-500">
-                    When you leave this window, the content is gone forver.
+                    When you leave this window, the content is gone forever.
                   </p>
                 </div>
               </div>
