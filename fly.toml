@@ -16,6 +16,7 @@ processes = []
   FOOTER = "true"
   BEHIND_PROXY = "true"
   REMOTE_IP_HEADER = "x-forwarded-for"
+  REMOTE_IP_PROXIES = "137.66.17.131,2a09:8280:1::a:7260"
 
 [experimental]
   allowed_public_ports = []
