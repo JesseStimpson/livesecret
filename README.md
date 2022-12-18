@@ -92,6 +92,7 @@ includes:
 To start the LiveSecret Phoenix server:
 
   * Install dependencies with `mix deps.get`
+  * Install Tailwind CSS with `mix tailwind.install`
   * Create and migrate your database with `mix ecto.setup`
   * Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
   * Run the tests with `mix test`
