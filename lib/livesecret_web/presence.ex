@@ -6,6 +6,8 @@ defmodule LiveSecretWeb.Presence do
   alias LiveSecret.Secret
   alias LiveSecretWeb.ActiveUser
 
+  require Logger
+
   @doc """
   Builds a map of user info from the current socket
   """
@@ -38,6 +40,8 @@ defmodule LiveSecretWeb.Presence do
        ) do
     presence_config = Application.fetch_env!(:livesecret, LiveSecretWeb.Presence)
 
+    Logger.debug("presence_config is #{inspect(presence_config)}")
+
     direct_address = :erlang.iolist_to_binary(:inet.ntoa(address))
     direct_id = "#{direct_address}:#{port}"
 
@@ -53,7 +57,8 @@ defmodule LiveSecretWeb.Presence do
           address =
             RemoteIp.from(x_headers,
               headers: [presence_config[:remote_ip_header]],
-              proxies: presence_config[:remote_ip_proxies]
+              proxies: presence_config[:remote_ip_proxies],
+              clients: presence_config[:remote_ip_clients]
             )
 
           # A lack of address is not acceptable. If we crash here, something is wrong with

@@ -73,11 +73,34 @@ if config_env() == :prod do
            use a reverse proxy. If "true", also be sure to set REMOTE_IP_HEADER
            to define a trusted x-header to avoid spoofing.
            """)),
+
+    # Define REMOTE_IP_HEADER as a the name of a trusted header on incoming HTTP
+    # requests that defines the remote address for the end user. Typically this is
+    # something like x-forwarded-for or x-real-ip. You must make sure you trust
+    # whatever upstream proxy is setting this header.
+    #    See remote_ip for more details
     remote_ip_header: System.get_env("REMOTE_IP_HEADER") || "x-forwarded-for",
+
+    # Define REMOTE_IP_PROXIES as a comma-delimited list of CIDRs that represent
+    # any proxies in between the end user and LiveSecret. When computing the remote
+    # address for a user, these networks will be ignored.
+    #    See remote_ip for more details
     remote_ip_proxies:
       (case System.get_env("REMOTE_IP_PROXIES") do
          nil -> []
          "" -> []
          proxies -> String.split(proxies, ",")
-       end)
+      end),
+
+    # Define REMOTE_IP_CLIENTS as a comma-delimited list of CIDRs that represent
+    # any known client networks. For example -- By default, LiveSecret will ignore
+    # a 10.0.0.0/8 address if it's computed as the remote address for a client. If
+    # an address on this network is allowable, it must be defined in REMOTE_IP_CLIENTS.
+    #    See remote_ip for more details
+    remote_ip_clients:
+      (case System.get_env("REMOTE_IP_CLIENTS") do
+        nil -> []
+        "" -> []
+        clients -> String.split(clients, ",")
+      end)
 end

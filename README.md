@@ -103,6 +103,15 @@ Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
 
 Please [check Phoenix's deployment guides](https://hexdocs.pm/phoenix/deployment.html).
 
+If you're using a volume controlled by docker compose, you'll have to create the database
+manually before running LiveSecret. For example:
+
+```
+cd /var/lib/docker/volumes/livesecret_db-data
+sqlite3 _data/livesecret.db "VACUUM;"
+chown -R nobody:root _data
+```
+
 There are a few required environment variables when running in production. You can view
 `fly.toml` in this repo for the values I've used for the demo, but it will be important for
 you to set these to values relevant to your deployment:
