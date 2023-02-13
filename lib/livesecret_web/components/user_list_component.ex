@@ -205,7 +205,7 @@ defmodule LiveSecretWeb.UserListComponent do
           </button>
         <% {:receiver, :unlocked, _} -> %>
           <button type="button" disabled={true} class={class}>
-            <.badge_icon id={:unlock} /> Unocked
+            <.badge_icon id={:unlock} /> Unlocked
           </button>
         <% {:receiver, :revealed, _} -> %>
           <button type="button" disabled={true} class={class}>
