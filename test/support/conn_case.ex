@@ -28,6 +28,8 @@ defmodule LiveSecretWeb.ConnCase do
 
       # The default endpoint for testing
       @endpoint LiveSecretWeb.Endpoint
+
+      use LiveSecretWeb, :verified_routes
     end
   end
 

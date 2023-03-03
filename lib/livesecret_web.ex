@@ -17,13 +17,16 @@ defmodule LiveSecretWeb do
   and import those modules here.
   """
 
+  def static_paths, do: ~w(assets fonts images favicon.ico robots.txt eff_large_wordlist.json)
+
   def controller do
     quote do
       use Phoenix.Controller, namespace: LiveSecretWeb
 
       import Plug.Conn
       import LiveSecretWeb.Gettext
-      alias LiveSecretWeb.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
     end
   end
 
@@ -45,7 +48,7 @@ defmodule LiveSecretWeb do
   def live_view do
     quote do
       use Phoenix.LiveView,
-        layout: {LiveSecretWeb.LayoutView, "live.html"}
+        layout: {LiveSecretWeb.LayoutView, :live}
 
       unquote(view_helpers())
     end
@@ -90,8 +93,6 @@ defmodule LiveSecretWeb do
       use Phoenix.HTML
 
       # Import LiveView and .heex helpers
-      # Note: Phoenix.LiveView.Helpers is soft deprecated, but still required for live_title_tag
-      import Phoenix.LiveView.Helpers
       import Phoenix.Component
 
       # Import basic rendering functionality (render, render_layout, etc)
@@ -99,7 +100,17 @@ defmodule LiveSecretWeb do
 
       import LiveSecretWeb.ErrorHelpers
       import LiveSecretWeb.Gettext
-      alias LiveSecretWeb.Router.Helpers, as: Routes
+
+      unquote(verified_routes())
+    end
+  end
+
+  def verified_routes do
+    quote do
+      use Phoenix.VerifiedRoutes,
+        endpoint: LiveSecretWeb.Endpoint,
+        router: LiveSecretWeb.Router,
+        statics: LiveSecretWeb.static_paths()
     end
   end
 
