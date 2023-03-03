@@ -90,7 +90,7 @@ if config_env() == :prod do
          nil -> []
          "" -> []
          proxies -> String.split(proxies, ",")
-      end),
+       end),
 
     # Define REMOTE_IP_CLIENTS as a comma-delimited list of CIDRs that represent
     # any known client networks. For example -- By default, LiveSecret will ignore
@@ -99,8 +99,8 @@ if config_env() == :prod do
     #    See remote_ip for more details
     remote_ip_clients:
       (case System.get_env("REMOTE_IP_CLIENTS") do
-        nil -> []
-        "" -> []
-        clients -> String.split(clients, ",")
-      end)
+         nil -> []
+         "" -> []
+         clients -> String.split(clients, ",")
+       end)
 end
