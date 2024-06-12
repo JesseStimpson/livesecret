@@ -4,6 +4,7 @@ defmodule LiveSecretWeb.PageLive do
   alias Phoenix.LiveView.JS
   alias LiveSecretWeb.{SecretFormComponent, ActiveUser}
   alias LiveSecret.{Presecret, Secret}
+  use PhoenixHTMLHelpers
 
   require Logger
 

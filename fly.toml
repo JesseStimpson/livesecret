@@ -11,12 +11,12 @@ processes = []
 
 [env]
   DATABASE_PATH="/data/livesecret_data/livesecret_prod.db"
-  PHX_HOST = "livesecret.fly.dev"
+  PHX_HOST = "livesecret.example.com"
   PORT = "8080"
   FOOTER = "true"
   BEHIND_PROXY = "true"
   REMOTE_IP_HEADER = "x-forwarded-for"
-  REMOTE_IP_PROXIES = "137.66.17.131,2a09:8280:1::a:7260"
+  REMOTE_IP_PROXIES = "111.111.111.111,aaaa:aaaa:1::a:aaaa"
 
 [experimental]
   allowed_public_ports = []

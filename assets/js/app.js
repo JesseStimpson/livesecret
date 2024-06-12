@@ -19,36 +19,42 @@
 //
 
 // Include phoenix_html to handle method=PUT/DELETE in forms and buttons.
-import "phoenix_html"
+import "phoenix_html";
 // Establish Phoenix Socket and LiveView configuration.
-import { Socket } from "phoenix"
-import { LiveSocket } from "phoenix_live_view"
-import topbar from "../vendor/topbar"
-import Hooks from "./hooks"
-import Events from "./events"
+import { Socket } from "phoenix";
+import { LiveSocket } from "phoenix_live_view";
+import topbar from "../vendor/topbar";
+import Hooks from "./hooks";
+import Events from "./events";
 
-let csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
-let liveSocket = new LiveSocket("/live", Socket, { params: { _csrf_token: csrfToken }, hooks: Hooks })
+let csrfToken = document
+  .querySelector("meta[name='csrf-token']")
+  .getAttribute("content");
+let liveSocket = new LiveSocket("/live", Socket, {
+  longPollFallbackMs: 2500,
+  params: { _csrf_token: csrfToken },
+  hooks: Hooks,
+});
 
 // Show progress bar on live navigation and form submits
-topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" })
-window.addEventListener("phx:page-loading-start", info => topbar.show())
-window.addEventListener("phx:page-loading-stop", info => topbar.hide())
+topbar.config({ barColors: { 0: "#29d" }, shadowColor: "rgba(0, 0, 0, .3)" });
+window.addEventListener("phx:page-loading-start", (info) => topbar.show(300));
+window.addEventListener("phx:page-loading-stop", (info) => topbar.hide());
 
 // connect if there are any LiveViews on the page
-liveSocket.connect()
+liveSocket.connect();
 
 // expose liveSocket on window for web console debug logs and latency simulation:
 // >> liveSocket.enableDebug()
 // >> liveSocket.enableLatencySim(1000)  // enabled for duration of browser session
 // >> liveSocket.disableLatencySim()
-window.liveSocket = liveSocket
+window.liveSocket = liveSocket;
 
 window.addEventListener("error", (event) => {
   console.log("Error detected. Making sure the userkey is removed");
   var userkeyStashEl = document.getElementById("userkey-stash");
   if (userkeyStashEl) {
-    userkeyStashEl.value = ""
+    userkeyStashEl.value = "";
   }
 });
 
@@ -56,14 +62,12 @@ window.addEventListener("live-secret:clipcopy", (event) => {
   if ("clipboard" in navigator) {
     const text = event.target.value;
     if (text == "") {
-
     } else {
       navigator.clipboard.writeText(text);
       event.target.classList.add("flash");
       setTimeout(() => {
         event.target.classList.remove("flash");
       }, 200);
-
     }
   } else {
     alert("Sorry, your browser does not support clipboard copy.");
@@ -83,14 +87,19 @@ window.addEventListener("live-secret:clipcopy-instructions", (event) => {
   }
 
   var oobUrlEl = document.getElementById("oob-url");
-  var instructions = `Hi, I'd like to share an encrypted message with you via LiveSecret.
+  var instructions =
+    `Hi, I'd like to share an encrypted message with you via LiveSecret.
 1. Open this link in your browser:
 \`\`\`
-`+ oobUrlEl.value + `
+` +
+    oobUrlEl.value +
+    `
 \`\`\`
 2. When prompted, enter the following passphrase:
 \`\`\`
-`+ passphrase + `
+` +
+    passphrase +
+    `
 \`\`\``;
 
   if ("clipboard" in navigator) {
@@ -107,14 +116,11 @@ window.addEventListener("live-secret:clipcopy-instructions", (event) => {
   } else {
     alert("Sorry, your browser does not support clipboard copy.");
   }
-
 });
 
 window.addEventListener("live-secret:select-choice", (event) => {
-  event.target.value = event.detail.value
-  event.target.dispatchEvent(
-    new Event("input", { bubbles: true })
-  )
+  event.target.value = event.detail.value;
+  event.target.dispatchEvent(new Event("input", { bubbles: true }));
 });
 
 window.addEventListener("live-secret:create-secret", Events.CreateSecret);

@@ -5,7 +5,7 @@ defmodule LiveSecretWeb.Router do
     plug(:accepts, ["html"])
     plug(:fetch_session)
     plug(:fetch_live_flash)
-    plug(:put_root_layout, {LiveSecretWeb.LayoutView, :root})
+    plug(:put_root_layout, {LiveSecretWeb.Layouts, :root})
     plug(:protect_from_forgery)
     plug(:put_secure_browser_headers)
   end
@@ -21,11 +21,6 @@ defmodule LiveSecretWeb.Router do
     live("/admin/:id", PageLive, :admin)
     live("/secret/:id", PageLive, :receiver)
   end
-
-  # Other scopes may use custom stacks.
-  # scope "/api", LiveSecretWeb do
-  #   pipe_through :api
-  # end
 
   # Enables LiveDashboard only for development
   #
