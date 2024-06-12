@@ -1,7 +1,7 @@
 defmodule LiveSecretWeb.SecretFormComponent do
   use Phoenix.Component
-  import Phoenix.HTML.Form
   alias Phoenix.LiveView.JS
+  use PhoenixHTMLHelpers
 
   def create(assigns) do
     ~H"""

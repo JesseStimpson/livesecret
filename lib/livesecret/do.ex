@@ -6,6 +6,10 @@ defmodule LiveSecret.Do do
     Repo.aggregate(from(_s in Secret, []), :count, :id)
   end
 
+  def list_secrets() do
+    Repo.all(Secret)
+  end
+
   @doc """
   Reads secret with id or throws
   """

@@ -1,7 +1,7 @@
 defmodule LiveSecret.Secret do
   use Ecto.Schema
 
-  alias LiveSecret.{DbId, Secret}
+  alias LiveSecret.{DbId, Secret, OperationalKey}
 
   @maxcontentsize 4096
   @ivsize 12
@@ -20,7 +20,18 @@ defmodule LiveSecret.Secret do
   end
 
   def new() do
-    %Secret{id: DbId.generate()}
+    # In the browser flow, a Secret is always created via Presecret, so
+    # expect these values to be overwritten by those attrs
+    # (See LiveSecret.Do.insert!)
+    #
+    # But we do provide all defaults here so that Secret.new always
+    # returns a valid struct
+    %Secret{
+      id: DbId.generate(),
+      content: "test",
+      creator_key: OperationalKey.generate(),
+      expires_at: NaiveDateTime.truncate(NaiveDateTime.utc_now(), :second)
+    }
   end
 
   def topic(id) do
