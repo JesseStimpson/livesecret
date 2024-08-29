@@ -5,7 +5,7 @@
     role="alert"
     phx-click="lv:clear-flash"
     phx-value-key="info"
-  ><%= live_flash(@flash, :info) %></button>
+  ><%= Phoenix.Flash.get(@flash, :info) %></button>
 
   <button
     type="button"
@@ -13,7 +13,7 @@
     role="alert"
     phx-click="lv:clear-flash"
     phx-value-key="error"
-  ><%= live_flash(@flash, :error) %></button>
+  ><%= Phoenix.Flash.get(@flash, :error) %></button>
 
   <%= @inner_content %>
 </main>
