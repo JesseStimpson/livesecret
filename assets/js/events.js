@@ -1,10 +1,10 @@
-import Encryption from "./encryption"
+import Encryption from "./encryption";
 
 async function CreateSecret(event) {
   var form = document.getElementById("secret-form");
 
-  var writableElements = []
-  var enabledElements = []
+  var writableElements = [];
+  var enabledElements = [];
 
   // Disable everything while we encrypt
   //console.log("Disabling form...");
@@ -27,16 +27,14 @@ async function CreateSecret(event) {
   var userkey = null;
   if (passphrase.value == "") {
     //console.log("Generating passphrase...");
-    const {
-      host, hostname, href, origin, pathname, port, protocol, search
-    } = window.location
+    const { host, hostname, href, origin, pathname, port, protocol, search } =
+      window.location;
 
-    var url = origin + '/eff_large_wordlist.json';
+    var url = origin + "/eff_large_wordlist.json";
     var data = await fetch(url);
     var wordlist = await data.json();
 
     userkey = await Encryption.GeneratePassphrase(wordlist);
-
   } else {
     //console.log("Found user provided passphrase");
     userkey = passphrase.value;
@@ -49,14 +47,19 @@ async function CreateSecret(event) {
   var ivVal = ivEl.value;
 
   var cleartextEl = document.getElementById("cleartext");
-  var cleartextVal = cleartextEl.value
-  cleartextEl.value = ""
-  cleartextEl.placeholder = "..."
+  var cleartextVal = cleartextEl.value;
+  cleartextEl.value = "";
+  cleartextEl.placeholder = "...";
 
-  passphrase.value = ""
-  passphrase.placeholder = "..."
+  passphrase.value = "";
+  passphrase.placeholder = "...";
 
-  var ciphertextVal = await Encryption.EncryptSecret(userkey, ivVal, burnkey, cleartextVal);
+  var ciphertextVal = await Encryption.EncryptSecret(
+    userkey,
+    ivVal,
+    burnkey,
+    cleartextVal,
+  );
 
   // Set hidden_input :content to the encrypted data
   var ciphertextEl = document.getElementById("ciphertext");
@@ -74,9 +77,7 @@ async function CreateSecret(event) {
     enabledElements[i].disabled = false;
   }
 
-  form.dispatchEvent(
-    new Event("submit", { bubbles: true, cancelable: true })
-  )
+  form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
 
   // Stash the passphrase
   var userkeyStashEl = document.getElementById("userkey-stash");
@@ -86,10 +87,14 @@ async function CreateSecret(event) {
 async function DecryptSecret() {
   var ciphertextEl = document.getElementById("ciphertext");
   var ivEl = document.getElementById("iv");
+  var passphraseformEl = document.getElementById("passphraseform");
+  var successmessageEl = document.getElementById("successmessage");
   var passphraseEl = document.getElementById("passphrase");
   var cleartextEl = document.getElementById("cleartext");
   var cleartextDivEl = document.getElementById("cleartext-container");
-  var decryptionfailureDivEl = document.getElementById("decryptionfailure-container");
+  var decryptionfailureDivEl = document.getElementById(
+    "decryptionfailure-container",
+  );
   var failCounterEl = document.getElementById("fail-counter");
 
   var userkey = passphraseEl.value;
@@ -97,7 +102,11 @@ async function DecryptSecret() {
   var ciphertextVal = ciphertextEl.value;
 
   try {
-    decryptedData = await Encryption.DecryptSecret(userkey, ivVal, ciphertextVal);
+    decryptedData = await Encryption.DecryptSecret(
+      userkey,
+      ivVal,
+      ciphertextVal,
+    );
   } catch (e) {
     var count = parseInt(failCounterEl.textContent) + 1;
     failCounterEl.textContent = count;
@@ -108,7 +117,8 @@ async function DecryptSecret() {
     return;
   }
 
-  passphraseEl.type = "hidden";
+  passphraseformEl.classList.add("hidden");
+  successmessageEl.classList.remove("hidden");
   passphraseEl.value = "";
   ciphertextEl.value = "";
   ivEl.value = "";
@@ -118,15 +128,13 @@ async function DecryptSecret() {
 
   var burnkeyEl = document.getElementById("burnkey");
   burnkeyEl.value = burnkey;
-  burnkeyEl.dispatchEvent(
-    new Event("input", { bubbles: true })
-  );
+  burnkeyEl.dispatchEvent(new Event("input", { bubbles: true }));
 
   cleartextDivEl.classList.remove("hidden");
   decryptionfailureDivEl.classList.add("hidden");
   cleartextEl.value = cleartext;
   cleartextEl.style.height = "";
-  cleartextEl.style.height = cleartextEl.scrollHeight + "px"
+  cleartextEl.style.height = cleartextEl.scrollHeight + "px";
 
   var closeBtnEl = document.getElementById("close-btn");
   var decryptBtnEl = document.getElementById("decrypt-btn");
@@ -136,8 +144,7 @@ async function DecryptSecret() {
 
 let Events = {
   CreateSecret: CreateSecret,
-  DecryptSecret: DecryptSecret
-}
+  DecryptSecret: DecryptSecret,
+};
 
 export default Events;
-

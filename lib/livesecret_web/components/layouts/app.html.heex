@@ -1,19 +1,4 @@
 <main>
-  <button
-    type="button"
-    class="alert bg-green-50 text-green-800 text-center w-full"
-    role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="info"
-  ><%= Phoenix.Flash.get(@flash, :info) %></button>
-
-  <button
-    type="button"
-    class="alert bg-red-50 text-red-800 text-center w-full"
-    role="alert"
-    phx-click="lv:clear-flash"
-    phx-value-key="error"
-  ><%= Phoenix.Flash.get(@flash, :error) %></button>
-
-  <%= @inner_content %>
+  <.flash_group flash={@flash} />
+  {@inner_content}
 </main>

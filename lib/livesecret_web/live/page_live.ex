@@ -111,7 +111,6 @@ defmodule LiveSecretWeb.PageLive do
     <div class="pt-8 px-8 pb-2 w-full flex justify-center items-center align-center text-gray-700">
       <%= case {not is_nil(@burned_at), @user.state} do %>
         <% {false, :locked} -> %>
-          <h3 class="text-sm font-medium text-gray-900"></h3>
           <div class="rounded-md bg-yellow-50 p-4">
             <div class="flex">
               <div class="flex-shrink-0">
@@ -159,6 +158,19 @@ defmodule LiveSecretWeb.PageLive do
               </div>
             </div>
           </div>
+        <% {true, _} -> %>
+        <div class="rounded-md bg-blue-50 p-4">
+          <div class="flex">
+            <div class="ml-3">
+              <div class="flex">
+                <h3 class="text-sm font-medium text-blue-800">👋 Goodbye</h3>
+              </div>
+              <div class="mt-2 text-sm text-blue-700">
+                <p>We're all done here. Please close this window.</p>
+              </div>
+            </div>
+          </div>
+        </div>
         <% _ -> %>
       <% end %>
     </div>
@@ -259,7 +271,7 @@ defmodule LiveSecretWeb.PageLive do
     ~H"""
     <div class="mx-auto max-w-7xl pt-4 px-4">
       <h2 class="text-lg font-bold leading-tight tracking-tight text-gray-900">
-        <%= render_slot(@inner_block) %>
+        {render_slot(@inner_block)}
       </h2>
     </div>
     """
@@ -314,7 +326,7 @@ defmodule LiveSecretWeb.PageLive do
                   <path d="M18 1.5c2.9 0 5.25 2.35 5.25 5.25v3.75a.75.75 0 01-1.5 0V6.75a3.75 3.75 0 10-7.5 0v3a3 3 0 013 3v6.75a3 3 0 01-3 3H3.75a3 3 0 01-3-3v-6.75a3 3 0 013-3h9v-3c0-2.9 2.35-5.25 5.25-5.25z" />
                 </svg>
               </div>
-              <div class="mt-3 text-center sm:mt-5">
+              <div id="passphraseform" class="mt-3 text-center sm:mt-5" phx-update="ignore">
                 <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
                   Enter the passphrase
                 </h3>
@@ -332,6 +344,16 @@ defmodule LiveSecretWeb.PageLive do
                     placeholder="Passphrase"
                     autocomplete="off"
                   />
+                </div>
+              </div>
+              <div id="successmessage" class="mt-3 text-center sm:mt-5 hidden" phx-update="ignore">
+                <h3 class="text-lg font-medium leading-6 text-gray-900" id="modal-title">
+                  Success!
+                </h3>
+                <div class="mt-2">
+                  <p class="text-sm text-gray-500">
+                  When you leave this window, the content is gone forever.
+                  </p>
                 </div>
               </div>
             </div>
@@ -381,17 +403,11 @@ defmodule LiveSecretWeb.PageLive do
                     Copy to clipboard <.action_icon has_text={true} id={:clipboard} />
                   </button>
                 </div>
-                <div class="block">
-                  <p class="text-md text-gray-700">Success!</p>
-                  <p class="text-sm text-gray-500">
-                    When you leave this window, the content is gone forever.
-                  </p>
-                </div>
               </div>
             </div>
 
             <.form :let={f} for={@changeset} phx-change="burn" autocomplete="off">
-              <%= hidden_input(f, :burn_key, id: "burnkey") %>
+              {hidden_input(f, :burn_key, id: "burnkey")}
             </.form>
 
             <div
@@ -473,9 +489,9 @@ defmodule LiveSecretWeb.PageLive do
       <div class="flex w-full items-center justify-between space-x-6 p-6">
         <div class="flex-1">
           <div class="flex items-center space-x-3">
-            <h3 class="truncate text-sm font-medium text-gray-900"><%= @title %></h3>
+            <h3 class="truncate text-sm font-medium text-gray-900">{@title}</h3>
           </div>
-          <p class="mt-1 text-sm text-gray-500"><%= @description %></p>
+          <p class="mt-1 text-sm text-gray-500">{@description}</p>
         </div>
       </div>
       <div class="inline-flex w-full items-center justify-center pb-4">
@@ -485,7 +501,7 @@ defmodule LiveSecretWeb.PageLive do
           phx-click={if @action_enabled, do: @action_click}
           disabled={not @action_enabled}
         >
-          <%= @action_text %>
+          {@action_text}
           <.action_icon :if={not is_nil(@action_icon)} has_text={true} id={@action_icon} />
         </button>
       </div>
@@ -750,8 +766,7 @@ defmodule LiveSecretWeb.PageLive do
 
       {:noreply,
        socket
-       |> assign_secret_metadata(secret)
-       |> put_burn_flash()}
+       |> assign_secret_metadata(secret)}
     else
       {:noreply, socket}
     end
@@ -827,8 +842,7 @@ defmodule LiveSecretWeb.PageLive do
       _ ->
         {:noreply,
          socket
-         |> assign(burned_at: burned_at)
-         |> put_burn_flash()}
+         |> assign(burned_at: burned_at)}
     end
   end
 
@@ -975,21 +989,5 @@ defmodule LiveSecretWeb.PageLive do
         )
         |> push_navigate(to: ~p"/")
     end
-  end
-
-  def put_burn_flash(socket = %{assigns: %{live_action: :admin}}) do
-    socket
-    |> put_flash(
-      :info,
-      "Burned. Encrypted content deleted from LiveSecret server. Close this window."
-    )
-  end
-
-  def put_burn_flash(socket = %{assigns: %{live_action: :receiver}}) do
-    socket
-    |> put_flash(
-      :info,
-      "The secret content has been deleted from the server. Please close this window."
-    )
   end
 end

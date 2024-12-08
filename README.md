@@ -5,6 +5,11 @@ web application built for secure sharing of passwords or other secrets.
 The secret content is End-to-End Encrypted using your browser's built-in cryptography
 library, [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
 
+LiveSecret is very easy to use. The following video demonstrates authoring a secret, unlocking
+it for a recipient, and the recipient decrypting it in another window.
+
+https://github.com/user-attachments/assets/1dcd4e68-12bf-4aed-bcc0-bfad6ba53630
+
 ## Disclaimer
 
 Because encryption is done within the browser, LiveSecret relies on the
@@ -56,9 +61,9 @@ the page.
 the LiveSecret server will prevent the ciphertext from being sent to the client. This locks them out from decrypting
 the secret even if they know the passphrase. An Admin can unlock a recipient by clicking the `Locked`
 button in the Admin View. When a recipient is Unlocked, they will be prompted for the passphrase, and if correct,
-the cleartext content is displayed. 
+the cleartext content is displayed.
 
-**Async mode is for asynchronous sharing.** When a secret is in Async mode, all users are Unlocked by default. 
+**Async mode is for asynchronous sharing.** When a secret is in Async mode, all users are Unlocked by default.
 If an attacker intercepts the URL and passphrase before the secret is burned, they will be able to decrypt the message.
 
 ### Burn after reading
