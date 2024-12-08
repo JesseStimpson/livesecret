@@ -45,7 +45,7 @@ defmodule LiveSecretWeb.UserListComponent do
                             clip-rule="evenodd"
                           />
                         </svg>
-                        <span class="truncate text-small"><code><%= active_user.name %></code></span>
+                        <span class="truncate text-small"><code>{active_user.name}</code></span>
                       </p>
                       <p class="mt-2 flex items-center text-sm text-gray-500">
                         <!-- Heroicon name: mini/clock -->
@@ -106,9 +106,9 @@ defmodule LiveSecretWeb.UserListComponent do
     <p class="truncate text-sm font-medium text-indigo-600">
       <%= case {@active_user.live_action, ActiveUser.connected?(@active_user)} do %>
         <% {_, true} -> %>
-          <%= ComponentUtil.render_live_action(@active_user.live_action, nil) %>
+          {ComponentUtil.render_live_action(@active_user.live_action, nil)}
         <% {_, false} -> %>
-          Former <%= ComponentUtil.render_live_action(@active_user.live_action, nil) %>
+          Former {ComponentUtil.render_live_action(@active_user.live_action, nil)}
       <% end %>
       <%= if @self == @active_user.id do %>
         (me)
@@ -127,9 +127,9 @@ defmodule LiveSecretWeb.UserListComponent do
   def time_info(assigns) do
     ~H"""
     <%= if ActiveUser.connected?(@active_user) do %>
-      Joined: <time datetime={@active_user.joined_at}><%= @active_user.joined_at %></time>
+      Joined: <time datetime={@active_user.joined_at}>{@active_user.joined_at}</time>
     <% else %>
-      Left: <time datetime={@active_user.left_at}><%= @active_user.left_at %></time>
+      Left: <time datetime={@active_user.left_at}>{@active_user.left_at}</time>
     <% end %>
     """
   end
