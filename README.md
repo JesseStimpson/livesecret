@@ -125,6 +125,7 @@ touch .env
 #   export SECRET_KEY_BASE=<result of mix phx.gen.secret>
 #   export DEFAULT_EMAIL=<my email address>
 #
+source .env
 docker compose build
 docker compose up -d
 ```
