@@ -36,7 +36,6 @@ services:
       LETSENCRYPT_TEST: ${LETSENCRYPT_TEST:-false}
       DEFAULT_HOST: ${PHX_HOST:-livesecret.local}
       VIRTUAL_HOST: ${PHX_HOST:-livesecret.local}
-      NETWORK_ACCESS: internal
       LETSENCRYPT_HOST: ${PHX_HOST:-livesecret.local}
       PHX_HOST: ${PHX_HOST:-livesecret.local}
       DATABASE_PATH: ${DATABASE_PATH:-/etc/data/livesecret.db}
