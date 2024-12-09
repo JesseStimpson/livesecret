@@ -1,12 +1,12 @@
 # LiveSecret
 
-**LiveSecret** is a [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
+[**LiveSecret**](https://livesecret.link) is a [Phoenix LiveView](https://hexdocs.pm/phoenix_live_view/Phoenix.LiveView.html)
 web application built for secure sharing of passwords or other secrets.
 The secret content is End-to-End Encrypted using your browser's built-in cryptography
 library, [SubtleCrypto](https://developer.mozilla.org/en-US/docs/Web/API/SubtleCrypto).
 
-LiveSecret is very easy to use. The following video demonstrates authoring a secret, unlocking
-it for a recipient, and the recipient decrypting it in another window.
+The following video demonstrates authoring a secret, unlocking it for a recipient, and
+the recipient decrypting it in another window.
 
 https://github.com/user-attachments/assets/1dcd4e68-12bf-4aed-bcc0-bfad6ba53630
 
@@ -110,20 +110,26 @@ Please [check Phoenix's deployment guides](https://hexdocs.pm/phoenix/deployment
 
 #### Docker Compose
 
+We provide a compose.yaml: it uses nginx-proxy to set up a reverse proxy and acme-companion
+to manage the SSL certificate. We host a publicly accessible LiveSecret at livesecret.link, and
+the instructions here reflect that deployment.
+
+You're encouraged to host your own server. If it's not publicly accessible, you'll have to
+change the configuration to suit your needs.
+
 ```bash
 touch .env
+# For livesecret.link, the .env file contains:
+#
+#   export PHX_HOST=livesecret.link
+#   export SECRET_KEY_BASE=<result of mix phx.gen.secret>
+#   export DEFAULT_EMAIL=<my email address>
+#
 docker compose build
-docker compose run web
+docker compose up -d
 ```
 
-If you're using a volume controlled by docker compose, you'll have to create the database
-manually before running LiveSecret. For example:
-
-```
-cd /var/lib/docker/volumes/livesecret_db-data
-sqlite3 _data/livesecret.db "VACUUM;"
-chown -R nobody:root _data
-```
+#### Deployment Configuration
 
 Standard Phoenix:
 * `DATABASE_PATH`: Path to the sqlite database on the filesystem
