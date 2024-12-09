@@ -1,0 +1,52 @@
+services:
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    environment:
+      TRUST_DOWNSTREAM_PROXY: false
+      SSL_POLICY: Mozilla-Modern
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - html:/usr/share/nginx/html
+      - certs:/etc/nginx/certs:ro
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    network_mode: bridge
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    environment:
+      DEFAULT_EMAIL: ${DEFAULT_EMAIL:-mail@yourdomain.tld}
+      CREATE_DEFAULT_CERTIFICATE: ${CREATE_DEFAULT_CERTIFICATE:-false}
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - certs:/etc/nginx/certs:rw
+      - acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    network_mode: bridge
+  web:
+    build: .
+    ports:
+      - "8000:80"
+    environment:
+      LETSENCRYPT_TEST: ${LETSENCRYPT_TEST:-false}
+      DEFAULT_HOST: ${PHX_HOST:-livesecret.local}
+      VIRTUAL_HOST: ${PHX_HOST:-livesecret.local}
+      LETSENCRYPT_HOST: ${PHX_HOST:-livesecret.local}
+      PHX_HOST: ${PHX_HOST:-livesecret.local}
+      DATABASE_PATH: ${DATABASE_PATH:-/etc/data/livesecret.db}
+      PORT: ${PORT:-80}
+      SECRET_KEY_BASE: ${SECRET_KEY_BASE:-UnGoAFE04s30EwJQD6XRsIjNiMNAsSSeIB7OLfhjE+jNfDGXyyODdQvbj+MeMsmL}
+      BEHIND_PROXY: ${BEHIND_PROXY:-true}
+      REMOTE_IP_HEADER: ${REMOTE_IP_HEADER:-x-real-ip}
+      REMOTE_IP_CLIENTS: 0.0.0.0/0
+    volumes:
+      - db-data:/etc/data:rw
+    network_mode: bridge
+volumes:
+  html:
+  certs:
+  acme:
+  db-data:

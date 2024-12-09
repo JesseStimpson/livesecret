@@ -5,10 +5,26 @@ defmodule LiveSecret.Release do
   """
   @app :livesecret
 
+  require Logger
+
   def migrate do
     load_app()
 
     for repo <- repos() do
+
+      # Ensures datbaase file exists on disk
+      database_path = repo.config()[:database]
+      case Exqlite.Basic.open(database_path) do
+        {:ok, conn} ->
+          Exqlite.Basic.close(conn)
+        error ->
+          Logger.critical("""
+          Error opening database at #{inspect(database_path)}:
+
+          #{inspect(error)}
+          """)
+      end
+
       {:ok, _, _} = Ecto.Migrator.with_repo(repo, &Ecto.Migrator.run(&1, :up, all: true))
     end
   end

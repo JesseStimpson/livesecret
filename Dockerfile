@@ -12,9 +12,9 @@
 #   - https://pkgs.org/ - resource for finding needed packages
 #   - Ex: hexpm/elixir:1.14.0-erlang-25.0.3-debian-bullseye-20210902-slim
 #
-ARG ELIXIR_VERSION=1.14.0
-ARG OTP_VERSION=24.3.4.5
-ARG DEBIAN_VERSION=bullseye-20220801-slim
+ARG ELIXIR_VERSION=1.17.3
+ARG OTP_VERSION=27.1.3
+ARG DEBIAN_VERSION=buster-20240612-slim
 
 ARG BUILDER_IMAGE="hexpm/elixir:${ELIXIR_VERSION}-erlang-${OTP_VERSION}-debian-${DEBIAN_VERSION}"
 ARG RUNNER_IMAGE="debian:${DEBIAN_VERSION}"
@@ -23,14 +23,14 @@ FROM ${BUILDER_IMAGE} as builder
 
 # install build dependencies
 RUN apt-get update -y && apt-get install -y build-essential git \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # prepare build dir
 WORKDIR /app
 
 # install hex + rebar
 RUN mix local.hex --force && \
-  mix local.rebar --force
+    mix local.rebar --force
 
 # set build ENV
 ENV MIX_ENV="prod"
@@ -68,8 +68,8 @@ RUN mix release
 # the compiled release and other runtime necessities
 FROM ${RUNNER_IMAGE}
 
-RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales \
-  && apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apt-get update -y && apt-get install -y libstdc++6 openssl libncurses5 locales sqlite3 \
+    && apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 # Set the locale
 RUN sed -i '/en_US.UTF-8/s/^# //g' /etc/locale.gen && locale-gen
@@ -87,9 +87,17 @@ ENV MIX_ENV="prod"
 # Only copy the final release from the build stage
 COPY --from=builder --chown=nobody:root /app/_build/${MIX_ENV}/rel/livesecret ./
 
-USER nobody
+EXPOSE ${PORT}
 
 CMD ["/app/bin/server"]
-# Appended by flyctl
-ENV ECTO_IPV6 true
-ENV ERL_AFLAGS "-proto_dist inet6_tcp"
+
+# Example run command:
+# docker run -it \
+#     -p 8000:80 \
+#     -e DATABASE_PATH=.livesecret/livesecret.db \
+#     -e PHX_HOST=example.com \
+#     -e PORT=80 \
+#     -e SECRET_KEY_BASE="$(mix phx.gen.secret)" \
+#     -e BEHIND_PROXY=false \
+#     -e REMOTE_IP_HEADER=x-real-ip \
+#     c921c88540f5e3bbf4f4849bc96968a0b0d824baff4d8e4050ab08925aa8b3c4
